@@ -71,6 +71,7 @@ def allow_node_logical_names():
     # v1.5 added logical name aliases
     return pecan.request.version.minor >= 5
 
+
 def get_rpc_node(node_ident):
     """Get the RPC node from the node uuid or logical name.
 
@@ -93,6 +94,7 @@ def get_rpc_node(node_ident):
 
     # Ensure we raise the same exception as we did for the Juno release
     raise exception.NodeNotFound(node=node_ident)
+
 
 def is_valid_node_name(name):
     """Determine if the provided name is a valid node name.

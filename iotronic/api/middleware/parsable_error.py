@@ -35,6 +35,7 @@ LOG = log.getLogger(__name__)
 
 class ParsableErrorMiddleware(object):
     """Replace error body with something the client can parse."""
+
     def __init__(self, app):
         self.app = app
 
@@ -69,7 +70,7 @@ class ParsableErrorMiddleware(object):
         if (state['status_code'] // 100) not in (2, 3):
             req = webob.Request(environ)
             if (req.accept.best_match(['application/json', 'application/xml'])
-                == 'application/xml'):
+                    == 'application/xml'):
                 try:
                     # simple check xml is valid
                     body = [et.ElementTree.tostring(

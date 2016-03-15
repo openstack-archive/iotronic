@@ -149,8 +149,9 @@ def _paginate_query(model, limit=None, marker=None, sort_key=None,
             % {'key': sort_key})
     return query.all()
 
-#### NEW
-            
+# NEW
+
+
 def add_location_filter_by_node(query, value):
     if strutils.is_int_like(value):
         return query.filter_by(node_id=value)
@@ -158,6 +159,7 @@ def add_location_filter_by_node(query, value):
         query = query.join(models.Node,
                            models.Location.node_id == models.Node.id)
         return query.filter(models.Node.uuid == value)
+
 
 class Connection(api.Connection):
     """SqlAlchemy connection."""
@@ -176,9 +178,9 @@ class Connection(api.Connection):
             query = query.filter_by(chassis_id=chassis_obj.id)
         if 'associated' in filters:
             if filters['associated']:
-                query = query.filter(models.Node.instance_uuid != None)
+                query = query.filter(models.Node.instance_uuid is not None)
             else:
-                query = query.filter(models.Node.instance_uuid == None)
+                query = query.filter(models.Node.instance_uuid is None)
         """
         if 'reserved' in filters:
             if filters['reserved']:
@@ -264,12 +266,13 @@ class Connection(api.Connection):
             except NoResultFound:
                 raise exception.NodeNotFound(node_id)
     """
+
     def create_node(self, values):
         # ensure defaults are present for new nodes
         if 'uuid' not in values:
             values['uuid'] = uuidutils.generate_uuid()
         if 'status' not in values:
-            values['status'] = states.OPERATIVE 
+            values['status'] = states.OPERATIVE
 
         node = models.Node()
         node.update(values)
@@ -301,7 +304,7 @@ class Connection(api.Connection):
             return query.one()
         except NoResultFound:
             raise exception.NodeNotFound(node=node_name)
-        
+
     def get_node_by_code(self, node_code):
         query = model_query(models.Node).filter_by(code=node_code)
         try:
@@ -323,8 +326,9 @@ class Connection(api.Connection):
 
         return result
     '''
+
     def destroy_node(self, node_id):
-        
+
         session = get_session()
         with session.begin():
             query = model_query(models.Node, session=session)
@@ -338,9 +342,10 @@ class Connection(api.Connection):
             # required for deleting all ports, attached to the node.
             if uuidutils.is_uuid_like(node_id):
                 node_id = node_ref['id']
-                
+
             location_query = model_query(models.Location, session=session)
-            location_query = add_location_filter_by_node(location_query, node_id)
+            location_query = add_location_filter_by_node(
+                location_query, node_id)
             location_query.delete()
 
             query.delete()
@@ -366,7 +371,7 @@ class Connection(api.Connection):
 
             query.delete()
         """
-        
+
     def update_node(self, node_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
         if 'uuid' in values:
@@ -560,6 +565,7 @@ class Connection(api.Connection):
             if count != 1:
                 raise exception.ChassisNotFound(chassis=chassis_id)
     """
+
     def register_conductor(self, values, update_existing=False):
         session = get_session()
         with session.begin():
@@ -641,8 +647,7 @@ class Connection(api.Connection):
         return d2c
 
 
-
-###################### NEW #############################
+# ##################### NEW #############################
     def create_session(self, values):
         session = models.SessionWP()
         session.update(values)
@@ -667,7 +672,7 @@ class Connection(api.Connection):
         location.update(values)
         location.save()
         return location
-    
+
     def update_location(self, location_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
         session = get_session()
@@ -680,7 +685,7 @@ class Connection(api.Connection):
         except NoResultFound:
             raise exception.LocationNotFound(location=location_id)
         return ref
-    
+
     def destroy_location(self, location_id):
         session = get_session()
         with session.begin():
@@ -689,21 +694,24 @@ class Connection(api.Connection):
             count = query.delete()
             if count == 0:
                 raise exception.LocationNotFound(location=location_id)
-    
+
     def get_locations_by_node_id(self, node_id, limit=None, marker=None,
-                             sort_key=None, sort_dir=None):
+                                 sort_key=None, sort_dir=None):
         query = model_query(models.Location)
         query = query.filter_by(node_id=node_id)
         return _paginate_query(models.Location, limit, marker,
                                sort_key, sort_dir, query)
-        
+
     def get_session_by_node_uuid(self, node_uuid, valid):
-        query = model_query(models.SessionWP).filter_by(node_uuid=node_uuid).filter_by(valid=valid)
+        query = model_query(
+            models.SessionWP).filter_by(
+            node_uuid=node_uuid).filter_by(
+            valid=valid)
         try:
             return query.one()
         except NoResultFound:
             return None
-        
+
     def get_session_by_session_id(self, session_id):
         query = model_query(models.SessionWP).filter_by(session_id=session_id)
         try:

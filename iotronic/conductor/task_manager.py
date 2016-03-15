@@ -32,8 +32,8 @@ A shared lock is useful when performing non-interfering operations,
 such as validating the driver interfaces.
 
 An exclusive lock is stored in the database to coordinate between
-:class:`iotronic.iotconductor.manager` instances, that are typically deployed on
-different hosts.
+:class:`iotronic.iotconductor.manager` instances,
+that are typically deployed on different hosts.
 
 :class:`TaskManager` methods, as well as driver methods, may be decorated to
 determine whether their invocation requires an exclusive lock.
@@ -176,7 +176,7 @@ class TaskManager(object):
         self._on_error_method = None
 
         self.context = context
-        #self.node = None
+        # self.node = None
         self.node = None
         self.shared = shared
 
@@ -201,8 +201,8 @@ class TaskManager(object):
             else:
             """
             self.node = objects.Node.get(context, node_id)
-            #self.ports = objects.Port.list_by_node_id(context, self.node.id)
-            #self.driver = driver_factory.get_driver(driver_name or
+            # self.ports = objects.Port.list_by_node_id(context, self.node.id)
+            # self.driver = driver_factory.get_driver(driver_name or
             #                                       self.node.driver)
 
             # NOTE(deva): this handles the Juno-era NOSTATE state
@@ -256,7 +256,7 @@ class TaskManager(object):
         to make it clear that this instance of TaskManager should no
         longer be accessed.
         """
-        pass #don't need it at the moment
+        pass  # don't need it at the moment
         """
         if not self.shared:
             try:
@@ -357,7 +357,7 @@ class TaskManager(object):
                         LOG.warning(_LW("Task's on_error hook failed to "
                                         "call %(method)s on node %(node)s"),
                                     {'method': self._on_error_method.__name__,
-                                    'node': self.node.uuid})
+                                     'node': self.node.uuid})
 
                     if thread is not None:
                         # This means the link() failed for some

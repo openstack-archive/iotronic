@@ -5,10 +5,11 @@ import wsme
 from iotronic.api.controllers import base
 from iotronic import objects
 
+
 class Location(base.APIBase):
     """API representation of a location.
     """
-    
+
     longitude = wsme.wsattr(wtypes.text)
     latitude = wsme.wsattr(wtypes.text)
     altitude = wsme.wsattr(wtypes.text)
@@ -26,12 +27,12 @@ class Location(base.APIBase):
 
     @staticmethod
     def convert_with_list(list):
-        list_locations=[]
+        list_locations = []
         for l in list:
             list_locations.append(Location(**l.as_dict()))
         return list_locations
 
-'''            
+'''
 class LocationCollection(collection.Collection):
     """API representation of a collection of locations."""
 
@@ -42,11 +43,11 @@ class LocationCollection(collection.Collection):
         self._type = 'locations'
 
     @staticmethod
-    def convert_with_locates(locations, limit, url=None, expand=False, **kwargs):
+    def convert_with_locates(locations,
+        limit, url=None, expand=False, **kwargs):
         collection = LocationCollection()
-        collection.locations = [Location.convert_with_locates(n, expand) for n in locations]
+        collection.locations = [Location.convert_with_locates(n, expand)
+            for n in locations]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
 '''
-
-

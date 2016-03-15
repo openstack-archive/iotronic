@@ -14,9 +14,7 @@
 # under the License.
 
 import os
-
-os.environ['EVENTLET_NO_GREENDNS'] = 'yes'
-
 import eventlet
 
+os.environ['EVENTLET_NO_GREENDNS'] = 'yes'
 eventlet.monkey_patch(os=False)

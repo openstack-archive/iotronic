@@ -237,7 +237,7 @@ def clean_up_pxe_config(task):
             # see: https://bugs.launchpad.net/iotronic/+bug/1441710
             if CONF.pxe.ipxe_enabled:
                 utils.unlink_without_raise(_get_pxe_mac_path(mac,
-                                           delimiter=''))
+                                                             delimiter=''))
 
     utils.rmtree_without_raise(os.path.join(get_root_dir(),
                                             task.node.uuid))

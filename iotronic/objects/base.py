@@ -120,6 +120,7 @@ def remotable_classmethod(fn):
 # "orphaned" and remotable methods cannot be called.
 def remotable(fn):
     """Decorator for remotable object methods."""
+
     def wrapper(self, *args, **kwargs):
         ctxt = self._context
         try:
@@ -407,7 +408,12 @@ class IotronicObject(object):
                     name in self.obj_extra_fields):
                 yield name, getattr(self, name)
 
-    items = lambda self: list(self.iteritems())
+    def as_list(self):
+        return list(self.iteritems())
+
+    items = as_list(self)
+
+    # items = lambda self: list(self.iteritems())
 
     def __getitem__(self, name):
         """For backwards-compatibility with dict-based objects.
@@ -514,7 +520,7 @@ class ObjectListBase(object):
         objects = []
         for entity in value:
             obj = IotronicObject.obj_from_primitive(entity,
-                                                  context=self._context)
+                                                    context=self._context)
             objects.append(obj)
         return objects
 
@@ -539,9 +545,10 @@ class IotronicObjectSerializer(messaging.NoOpSerializer):
     """A IotronicObject-aware Serializer.
 
     This implements the Oslo Serializer interface and provides the
-    ability to serialize and deserialize IotronicObject entities. Any service
-    that needs to accept or return IotronicObjects as arguments or result values
-    should pass this to its RpcProxy and RpcDispatcher objects.
+    ability to serialize and deserialize IotronicObject entities.
+    Any service that needs to accept or return IotronicObjects as
+    arguments or result values should pass this to its RpcProxy
+    and RpcDispatcher objects.
     """
 
     def _process_iterable(self, context, action_fn, values):
@@ -582,8 +589,8 @@ class IotronicObjectSerializer(messaging.NoOpSerializer):
 def obj_to_primitive(obj):
     """Recursively turn an object into a python primitive.
 
-    An IotronicObject becomes a dict, and anything that implements ObjectListBase
-    becomes a list.
+    An IotronicObject becomes a dict, and anything that implements
+    ObjectListBase becomes a list.
     """
     if isinstance(obj, ObjectListBase):
         return [obj_to_primitive(x) for x in obj]
