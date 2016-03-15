@@ -22,17 +22,16 @@ from webob import exc
 from wsme import types as wtypes
 from iotronic.api.controllers import link
 from iotronic.api.controllers.v1 import node
-
-'''
-#from iotronic.api.controllers.v1 import chassis
-#from iotronic.api.controllers.v1 import driver
-
-#from iotronic.api.controllers.v1 import port
-'''
-
 from iotronic.api.controllers import base
 from iotronic.api import expose
 from iotronic.common.i18n import _
+
+'''
+# from iotronic.api.controllers.v1 import chassis
+# from iotronic.api.controllers.v1 import driver
+
+# from iotronic.api.controllers.v1 import port
+'''
 
 BASE_VERSION = 1
 
@@ -56,7 +55,7 @@ class MediaType(base.APIBase):
     def __init__(self, base, type):
         self.base = base
         self.type = type
-'''        
+'''
 
 
 class V1(base.APIBase):
@@ -65,29 +64,29 @@ class V1(base.APIBase):
     id = wtypes.text
     """The ID of the version, also acts as the release number"""
 
-    #media_types = [MediaType]
+    # media_types = [MediaType]
     """An array of supported media types for this version"""
 
-    #links = [link.Link]
+    # links = [link.Link]
     """Links that point to a specific URL for this version and documentation"""
 
-    #chassis = [link.Link]
+    # chassis = [link.Link]
     """Links to the chassis resource"""
 
     nodes = [link.Link]
     """Links to the nodes resource"""
-    
-    #ports = [link.Link]
+
+    # ports = [link.Link]
     """Links to the ports resource"""
 
-    #drivers = [link.Link]
+    # drivers = [link.Link]
     """Links to the drivers resource"""
 
     @staticmethod
     def convert():
         v1 = V1()
         v1.id = "v1"
-        
+
         v1.nodes = [link.Link.make_link('self', pecan.request.host_url,
                                         'nodes', ''),
                     link.Link.make_link('bookmark',
@@ -95,7 +94,7 @@ class V1(base.APIBase):
                                         'nodes', '',
                                         bookmark=True)
                     ]
-        
+
         '''
         v1.links = [link.Link.make_link('self', pecan.request.host_url,
                                         'v1', '', bookmark=True),
@@ -105,10 +104,10 @@ class V1(base.APIBase):
                                         'api-spec-v1.html',
                                         bookmark=True, type='text/html')
                     ]
-        
+
         v1.media_types = [MediaType('application/json',
                           'application/vnd.openstack.iotronic.v1+json')]
-        
+
         v1.chassis = [link.Link.make_link('self', pecan.request.host_url,
                                           'chassis', ''),
                       link.Link.make_link('bookmark',
@@ -138,11 +137,11 @@ class V1(base.APIBase):
 
 class Controller(rest.RestController):
     """Version 1 API controller root."""
-    
+
     nodes = node.NodesController()
-    #ports = port.PortsController()
-    #chassis = chassis.ChassisController()
-    #drivers = driver.DriversController()
+    # ports = port.PortsController()
+    # chassis = chassis.ChassisController()
+    # drivers = driver.DriversController()
 
     @expose.expose(V1)
     def get(self):
@@ -159,8 +158,9 @@ class Controller(rest.RestController):
             raise exc.HTTPNotAcceptable(_(
                 "Mutually exclusive versions requested. Version %(ver)s "
                 "requested but not supported by this service. The supported "
-                "version range is: [%(min)s, %(max)s].") % {'ver': version,
-                'min': MIN_VER_STR, 'max': MAX_VER_STR}, headers=headers)
+                "version range is: [%(min)s,%(max)s].") %
+                    {'ver': version, 'min': MIN_VER_STR, 'max': MAX_VER_STR},
+                    headers=headers)
         # ensure the minor version is within the supported range
         if version < MIN_VER or version > MAX_VER:
             raise exc.HTTPNotAcceptable(_(

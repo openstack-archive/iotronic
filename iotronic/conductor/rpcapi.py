@@ -78,9 +78,9 @@ class ConductorAPI(object):
                         'driver %s.') % node.driver)
             raise exception.NoValidHost(reason=reason)
         '''
-        
+
         pass
-    
+
     def get_topic_for_driver(self, driver_name):
         """Get RPC topic name for a conductor supporting the given driver.
 

@@ -29,6 +29,7 @@ LOG = logging.getLogger(__name__)
 # NOTE(zyluo): This lambda function was declared to avoid mocking collisions
 #              with time.time() called in the standard logging module
 #              during unittests.
+
 _ts = lambda: time.time()
 
 
@@ -50,6 +51,7 @@ class LoopingCallDone(Exception):
 
 
 class LoopingCallBase(object):
+
     def __init__(self, f=None, *args, **kw):
         self.args = args
         self.kw = kw

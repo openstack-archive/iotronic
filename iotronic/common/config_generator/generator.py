@@ -122,8 +122,7 @@ def generate(argv):
                 opt_list.append((ext.name, opts))
 
     for pkg_name in pkg_names:
-        mods = mods_by_pkg.get(pkg_name)
-        mods.sort()
+        mods = sorted(mods_by_pkg.get(pkg_name))
         for mod_str in mods:
             if mod_str.endswith('.__init__'):
                 mod_str = mod_str[:mod_str.rfind(".")]

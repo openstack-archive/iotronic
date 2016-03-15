@@ -117,7 +117,7 @@ class RPCService(service.Service):
 
 def prepare_service(argv=[]):
     log.register_options(cfg.CONF)
-    
+
     log.set_defaults(default_log_levels=['amqp=WARN',
                                          'amqplib=WARN',
                                          'qpid.messagregister_optionsing=INFO',

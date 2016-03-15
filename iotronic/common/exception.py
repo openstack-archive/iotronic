@@ -159,11 +159,14 @@ class InstanceAssociated(Conflict):
     message = _("Instance %(instance_uuid)s is already associated with a node,"
                 " it cannot be associated with this other node %(node)s")
 
+
 class DuplicateName(Conflict):
     message = _("A node with name %(name)s already exists.")
 
+
 class DuplicateCode(Conflict):
     message = _("A node with code %(code)s already exists.")
+
 
 class InvalidUUID(Invalid):
     message = _("Expected a uuid but received %(uuid)s.")
@@ -573,4 +576,3 @@ class PathNotFound(IotronicException):
 
 class DirectoryNotWritable(IotronicException):
     message = _("Directory %(dir)s is not writable.")
-

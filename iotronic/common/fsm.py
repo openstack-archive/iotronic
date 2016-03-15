@@ -32,6 +32,7 @@ from iotronic.common.i18n import _
 
 class _Jump(object):
     """A FSM transition tracks this data while jumping."""
+
     def __init__(self, name, on_enter, on_exit):
         self.name = name
         self.on_enter = on_enter
@@ -44,6 +45,7 @@ class FSM(object):
     This class models a state machine, and expects an outside caller to
     manually trigger the state changes one at a time by invoking process_event
     """
+
     def __init__(self, start_state=None):
         self._transitions = {}
         self._states = OrderedDict()
