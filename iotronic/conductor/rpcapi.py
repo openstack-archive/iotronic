@@ -22,9 +22,7 @@ import random
 
 import oslo_messaging as messaging
 
-from iotronic.common import exception
 from iotronic.common import hash_ring
-from iotronic.common.i18n import _
 from iotronic.common import rpc
 from iotronic.conductor import manager
 from iotronic.objects import base as objects_base
@@ -78,9 +76,7 @@ class ConductorAPI(object):
                         'driver %s.') % node.driver)
             raise exception.NoValidHost(reason=reason)
         '''
-        
-        pass
-    
+
     def get_topic_for_driver(self, driver_name):
         """Get RPC topic name for a conductor supporting the given driver.
 

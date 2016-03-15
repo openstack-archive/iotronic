@@ -1,49 +1,64 @@
-from pecan import rest
-from iotronic.api import expose
-from wsme import types as wtypes
-from iotronic import objects
-from iotronic.api.controllers.v1 import types
+#  Licensed under the Apache License, Version 2.0 (the "License"); you may
+#  not use this file except in compliance with the License. You may obtain
+#  a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#  License for the specific language governing permissions and limitations
+#  under the License.
+
+
+from iotronic.api.controllers import base
 from iotronic.api.controllers.v1 import collection
 from iotronic.api.controllers.v1 import location as loc
+from iotronic.api.controllers.v1 import types
 from iotronic.api.controllers.v1 import utils as api_utils
-from iotronic.api.controllers import base
+from iotronic.api import expose
 from iotronic.common import exception
-import wsme
+from iotronic import objects
 import pecan
-import code
+from pecan import rest
+import wsme
+from wsme import types as wtypes
 
 
 class Node(base.APIBase):
     """API representation of a node.
+
     """
 
     uuid = types.uuid
     code = wsme.wsattr(wtypes.text)
     status = wsme.wsattr(wtypes.text)
-    name= wsme.wsattr(wtypes.text)
-    device= wsme.wsattr(wtypes.text)
-    session= wsme.wsattr(wtypes.text)
-    mobile=types.boolean
-    location=wsme.wsattr([loc.Location])
-    extra=types.jsontype
+    name = wsme.wsattr(wtypes.text)
+    device = wsme.wsattr(wtypes.text)
+    session = wsme.wsattr(wtypes.text)
+    mobile = types.boolean
+    location = wsme.wsattr([loc.Location])
+    extra = types.jsontype
 
     @staticmethod
     def _convert_with_locates(node, url, expand=True, show_password=True):
-        
+
         try:
-            session=objects.SessionWP({}).get_session_by_node_uuid(node.uuid,valid=True)
-            node.session=session.session_id
-        except:
+            session = objects.SessionWP(
+                {}).get_session_by_node_uuid(
+                node.uuid, valid=True)
+            node.session = session.session_id
+        except Exception:
             pass
-        
+
         if not expand:
-            except_list = ['name', 'code', 'status','uuid','session']
+            except_list = ['name', 'code', 'status', 'uuid', 'session']
             node.unset_fields_except(except_list)
             return node
-            
-        list_loc=objects.Location({}).list_by_node_id({},node.id)
-        node.location=loc.Location.convert_with_list(list_loc)
-            
+
+        list_loc = objects.Location({}).list_by_node_id({}, node.id)
+        node.location = loc.Location.convert_with_list(list_loc)
+
         '''
         else:
             if not show_password:
@@ -66,14 +81,14 @@ class Node(base.APIBase):
                       ]
         '''
         return node
-    
+
     @classmethod
     def convert_with_locates(cls, rpc_node, expand=True):
         node = Node(**rpc_node.as_dict())
-        node.id=rpc_node.id
+        node.id = rpc_node.id
         return cls._convert_with_locates(node, pecan.request.host_url,
-                                       expand,
-                                       pecan.request.context.show_password)
+                                         expand,
+                                         pecan.request.context.show_password)
 
     def __init__(self, **kwargs):
         self.fields = []
@@ -84,10 +99,11 @@ class Node(base.APIBase):
                 continue
             self.fields.append(k)
             setattr(self, k, kwargs.get(k, wtypes.Unset))
-            
+
+
 class NodeCollection(collection.Collection):
     """API representation of a collection of nodes."""
-    
+
     nodes = [Node]
     """A list containing nodes objects"""
 
@@ -97,10 +113,13 @@ class NodeCollection(collection.Collection):
     @staticmethod
     def convert_with_locates(nodes, limit, url=None, expand=False, **kwargs):
         collection = NodeCollection()
-        collection.nodes = [Node.convert_with_locates(n, expand) for n in nodes]
+        collection.nodes = [
+            Node.convert_with_locates(
+                n, expand) for n in nodes]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
-    
+
+
 class NodesController(rest.RestController):
 
     invalid_sort_key_list = ['properties']
@@ -137,7 +156,7 @@ class NodesController(rest.RestController):
             nodes = objects.Node.list(pecan.request.context, limit, marker_obj,
                                       sort_key=sort_key, sort_dir=sort_dir,
                                       filters=filters)
-            
+
         parameters = {'sort_key': sort_key, 'sort_dir': sort_dir}
         '''
         if associated:
@@ -146,10 +165,10 @@ class NodesController(rest.RestController):
             parameters['maintenance'] = maintenance
         '''
         return NodeCollection.convert_with_locates(nodes, limit,
-                                                 url=resource_url,
-                                                 expand=expand,
-                                                 **parameters)
-    
+                                                   url=resource_url,
+                                                   expand=expand,
+                                                   **parameters)
+
     @expose.expose(NodeCollection, types.uuid, types.uuid, types.boolean,
                    types.boolean, types.uuid, int, wtypes.text, wtypes.text)
     def get_all(self, chassis_uuid=None, instance_uuid=None, associated=None,
@@ -176,19 +195,17 @@ class NodesController(rest.RestController):
                                           associated, maintenance, marker,
                                           limit, sort_key, sort_dir)
 
-    
-    
-    @expose.expose(Node,types.uuid_or_name)    
-    def get(self,node_ident):
+    @expose.expose(Node, types.uuid_or_name)
+    def get(self, node_ident):
         """Retrieve information about the given node.
 
         :param node_ident: UUID or logical name of a node.
         """
         rpc_node = api_utils.get_rpc_node(node_ident)
         node = Node(**rpc_node.as_dict())
-        node.id=rpc_node.id
+        node.id = rpc_node.id
         return Node.convert_with_locates(node)
-    
+
     @expose.expose(None, types.uuid_or_name, status_code=204)
     def delete(self, node_ident):
         """Delete a node.
@@ -205,11 +222,11 @@ class NodesController(rest.RestController):
 
         pecan.request.rpcapi.destroy_node(pecan.request.context,
                                           rpc_node.uuid, topic)
-        
+
     @expose.expose(Node, body=Node, status_code=201)
-    def post(self,Node):
+    def post(self, Node):
         """Create a new Node.
-        
+
         :param Node: a Node within the request body.
         """
         if not Node.name:
@@ -218,25 +235,24 @@ class NodesController(rest.RestController):
         if not Node.code:
             raise exception.MissingParameterValue(
                 _("Code is not specified."))
-        if not Node.location: 
+        if not Node.location:
             raise exception.MissingParameterValue(
                 _("Location is not specified."))
-        
+
         if Node.name:
             if not api_utils.is_valid_node_name(Node.name):
                 msg = _("Cannot create node with invalid name %(name)s")
                 raise wsme.exc.ClientSideError(msg % {'name': Node.name},
-                                              status_code=400)
-        
+                                               status_code=400)
+
         new_Node = objects.Node(pecan.request.context,
                                 **Node.as_dict())
         new_Node.create()
-        
-        new_Location=objects.Location(pecan.request.context,
-                                **Node.location[0].as_dict())
-        new_Location.node_id=new_Node.id
-        new_Location.create()
-        
-        #pecan.response.location = link.build_url('Nodes', new_Node.uuid)
-        return Node.convert_with_locates(new_Node)
 
+        new_Location = objects.Location(pecan.request.context,
+                                        **Node.location[0].as_dict())
+        new_Location.node_id = new_Node.id
+        new_Location.create()
+
+        # pecan.response.location = link.build_url('Nodes', new_Node.uuid)
+        return Node.convert_with_locates(new_Node)

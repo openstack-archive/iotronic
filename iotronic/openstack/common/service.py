@@ -143,12 +143,14 @@ class Launcher(object):
 
 
 class SignalExit(SystemExit):
+
     def __init__(self, signo, exccode=1):
         super(SignalExit, self).__init__(exccode)
         self.signo = signo
 
 
 class ServiceLauncher(Launcher):
+
     def _handle_signal(self, signo, frame):
         # Allow the process to be killed again and die from natural causes
         _set_signals_handler(signal.SIG_DFL)
@@ -191,6 +193,7 @@ class ServiceLauncher(Launcher):
 
 
 class ServiceWrapper(object):
+
     def __init__(self, service, workers):
         self.service = service
         self.workers = workers

@@ -512,7 +512,7 @@ def is_whole_disk_image(ctx, instance_info):
     else:
         # Non glance image ref
         if (not instance_info.get('kernel') and
-            not instance_info.get('ramdisk')):
+                not instance_info.get('ramdisk')):
             is_whole_disk_image = True
 
     return is_whole_disk_image
