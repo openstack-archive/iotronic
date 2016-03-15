@@ -41,7 +41,7 @@ AVAILABLE = 'available'
 def upgrade():
     op.execute(
         node.update().where(
-            node.c.provision_state == None).values(
+            node.c.provision_state is None).values(
                 {'provision_state': op.inline_literal(AVAILABLE)}))
 
 

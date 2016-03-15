@@ -17,7 +17,6 @@ from oslo_utils import strutils
 from oslo_utils import uuidutils
 
 from iotronic.common import exception
-from iotronic.common import utils
 from iotronic.db import api as dbapi
 from iotronic.objects import base
 from iotronic.objects import utils as obj_utils
@@ -48,7 +47,10 @@ class Location(base.IotronicObject):
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Location._from_db_object(cls(context), obj) for obj in db_objects]
+        return [
+            Location._from_db_object(
+                cls(context),
+                obj) for obj in db_objects]
 
     @base.remotable_classmethod
     def get(cls, context, location_id):
@@ -101,9 +103,9 @@ class Location(base.IotronicObject):
 
         """
         db_locations = cls.dbapi.get_location_list(limit=limit,
-                                           marker=marker,
-                                           sort_key=sort_key,
-                                           sort_dir=sort_dir)
+                                                   marker=marker,
+                                                   sort_key=sort_key,
+                                                   sort_dir=sort_dir)
         return Location._from_db_object_list(db_locations, cls, context)
 
     @base.remotable_classmethod
@@ -121,13 +123,13 @@ class Location(base.IotronicObject):
 
         """
         db_locations = cls.dbapi.get_locations_by_node_id(node_id, limit=limit,
-                                                  marker=marker,
-                                                  sort_key=sort_key,
-                                                  sort_dir=sort_dir)
+                                                          marker=marker,
+                                                          sort_key=sort_key,
+                                                          sort_dir=sort_dir)
         return Location._from_db_object_list(db_locations, cls, context)
 
     @base.remotable
-    def create(self,context=None):
+    def create(self, context=None):
         """Create a Location record in the DB.
 
         :param context: Security context. NOTE: This should only

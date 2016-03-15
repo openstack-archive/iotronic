@@ -31,6 +31,7 @@ class AuthTokenMiddleware(auth_token.AuthProtocol):
     for public routes in the API.
 
     """
+
     def __init__(self, app, conf, public_api_routes=[]):
         # TODO(mrda): Remove .xml and ensure that doesn't result in a
         # 401 Authentication Required instead of 404 Not Found

@@ -30,8 +30,8 @@ app = {
     'acl_public_routes': [
         '/',
         '/v1',
-        #'/v1/drivers/[a-z_]*/vendor_passthru/lookup',
-        #'/v1/nodes/[a-z0-9\-]+/vendor_passthru/heartbeat',
+        # '/v1/drivers/[a-z_]*/vendor_passthru/lookup',
+        # '/v1/nodes/[a-z0-9\-]+/vendor_passthru/heartbeat',
         '/v1/nodes/[a-z0-9\-]',
     ],
 }

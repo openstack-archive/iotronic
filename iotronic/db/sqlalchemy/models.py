@@ -24,12 +24,13 @@ from oslo_config import cfg
 from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 import six.moves.urllib.parse as urlparse
-from sqlalchemy import Boolean, Column, DateTime
+from sqlalchemy import Boolean
+from sqlalchemy import Column
 from sqlalchemy import ForeignKey, Integer
-from sqlalchemy import schema, String, Text
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import schema
+from sqlalchemy import String
 from sqlalchemy.types import TypeDecorator, TEXT
-
 from iotronic.common import paths
 
 
@@ -39,7 +40,8 @@ sql_opts = [
                help='MySQL engine to use.')
 ]
 
-_DEFAULT_SQL_CONNECTION = 'sqlite:///' + paths.state_path_def('iotronic.sqlite')
+_DEFAULT_SQL_CONNECTION = 'sqlite:///' + \
+    paths.state_path_def('iotronic.sqlite')
 
 
 cfg.CONF.register_opts(sql_opts, 'database')
@@ -89,7 +91,7 @@ class JSONEncodedList(JsonEncodedType):
 
 
 class IotronicBase(models.TimestampMixin,
-                 models.ModelBase):
+                   models.ModelBase):
 
     metadata = None
 
@@ -142,7 +144,7 @@ class Node(Base):
     """Represents a Node."""
 
     __tablename__ = 'nodes'
-    
+
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_nodes0uuid'),
         schema.UniqueConstraint('code', name='uniq_nodes0code'),
@@ -155,8 +157,7 @@ class Node(Base):
     device = Column(String(255))
     session = Column(String(255), nullable=True)
     mobile = Column(Boolean, default=False)
-    #location = Column(JSONEncodedDict)
-    extra = Column(JSONEncodedDict)    
+    extra = Column(JSONEncodedDict)
 """
     __tablename__ = 'nodes'
     '''
@@ -212,6 +213,7 @@ class Node(Base):
     #extra = Column(JSONEncodedDict)
 """
 
+
 class Location(Base):
     """Represents a location of a node."""
 
@@ -224,19 +226,25 @@ class Location(Base):
     altitude = Column(String(18), nullable=True)
     node_id = Column(Integer, ForeignKey('nodes.id'))
 
+
 class SessionWP(Base):
     """Represents a session of a node."""
 
     __tablename__ = 'sessions'
     __table_args__ = (
-        schema.UniqueConstraint('session_id', name='uniq_session_id0session_id'),
-        schema.UniqueConstraint('node_uuid', name='uniq_node_uuid0node_uuid'),
+        schema.UniqueConstraint(
+            'session_id',
+            name='uniq_session_id0session_id'),
+        schema.UniqueConstraint(
+            'node_uuid',
+            name='uniq_node_uuid0node_uuid'),
         table_args())
     id = Column(Integer, primary_key=True)
     valid = Column(Boolean, default=True)
     session_id = Column(String(15))
     node_uuid = Column(String(36))
     node_id = Column(Integer, ForeignKey('nodes.id'))
+
 
 class Port(Base):
     """Represents a network port of a bare metal node."""
@@ -251,4 +259,3 @@ class Port(Base):
     address = Column(String(18))
     node_id = Column(Integer, ForeignKey('nodes.id'), nullable=True)
     extra = Column(JSONEncodedDict)
-

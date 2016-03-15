@@ -56,6 +56,7 @@ def list_opts():
 
 
 class EventletBackdoorConfigValueError(Exception):
+
     def __init__(self, port_range, help_msg, ex):
         msg = ('Invalid backdoor_port configuration %(range)s: %(ex)s. '
                '%(help)s' %
@@ -108,7 +109,7 @@ def _listen(host, start_port, end_port, listen_func):
             return listen_func((host, try_port))
         except socket.error as exc:
             if (exc.errno != errno.EADDRINUSE or
-               try_port >= end_port):
+                    try_port >= end_port):
                 raise
             try_port += 1
 

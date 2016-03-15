@@ -17,7 +17,6 @@ from oslo_utils import strutils
 from oslo_utils import uuidutils
 
 from iotronic.common import exception
-from iotronic.common import utils
 from iotronic.db import api as dbapi
 from iotronic.objects import base
 from iotronic.objects import utils as obj_utils
@@ -48,7 +47,10 @@ class SessionWP(base.IotronicObject):
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [SessionWP._from_db_object(cls(context), obj) for obj in db_objects]
+        return [
+            SessionWP._from_db_object(
+                cls(context),
+                obj) for obj in db_objects]
 
     @base.remotable_classmethod
     def get(cls, context, session_id):
@@ -74,7 +76,7 @@ class SessionWP(base.IotronicObject):
         db_session = cls.dbapi.get_session_by_id(ses_id)
         session = SessionWP._from_db_object(cls(context), db_session)
         return session
-    
+
     @base.remotable_classmethod
     def get_by_session_id(cls, context, session_id):
         """Find a session based on its integer id and return a SessionWP object.
@@ -87,17 +89,17 @@ class SessionWP(base.IotronicObject):
         return session
 
     @base.remotable_classmethod
-    def get_session_by_node_uuid(cls,node_uuid,valid=True, context=None ):
+    def get_session_by_node_uuid(cls, node_uuid, valid=True, context=None):
         """Find a session based on uuid and return a :class:`SessionWP` object.
 
         :param node_uuid: the uuid of a node.
         :param context: Security context
         :returns: a :class:`SessionWP` object.
         """
-        db_session = cls.dbapi.get_session_by_node_uuid(node_uuid,valid)
+        db_session = cls.dbapi.get_session_by_node_uuid(node_uuid, valid)
         session = SessionWP._from_db_object(cls(context), db_session)
-        return session  
-    
+        return session
+
     @base.remotable_classmethod
     def list(cls, context, limit=None, marker=None,
              sort_key=None, sort_dir=None):
@@ -112,9 +114,9 @@ class SessionWP(base.IotronicObject):
 
         """
         db_sessions = cls.dbapi.get_session_list(limit=limit,
-                                           marker=marker,
-                                           sort_key=sort_key,
-                                           sort_dir=sort_dir)
+                                                 marker=marker,
+                                                 sort_key=sort_key,
+                                                 sort_dir=sort_dir)
         return SessionWP._from_db_object_list(db_sessions, cls, context)
 
     '''
@@ -138,9 +140,9 @@ class SessionWP(base.IotronicObject):
                                                   sort_dir=sort_dir)
         return SessionWP._from_db_object_list(db_sessions, cls, context)
     '''
-    
+
     @base.remotable
-    def create(self,context=None):
+    def create(self, context=None):
         """Create a SessionWP record in the DB.
 
         :param context: Security context. NOTE: This should only

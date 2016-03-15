@@ -103,4 +103,4 @@ def upgrade():
 
 def downgrade():
     raise NotImplementedError(('Downgrade from initial migration is'
-                              ' unsupported.'))
+                               ' unsupported.'))

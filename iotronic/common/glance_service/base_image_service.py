@@ -240,7 +240,6 @@ class BaseImageService(object):
     @check_image_service
     def _update(self, image_id, image_meta, data=None, method='update',
                 purge_props=False):
-
         """Modify the given image with the new data.
 
         :param image_id: The opaque image identifier.
