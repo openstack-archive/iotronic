@@ -109,6 +109,7 @@ def nested_object_or_none(objclass):
 
 def dt_serializer(name):
     """Return a datetime serializer for a named attribute."""
+
     def serializer(self, name=name):
         if getattr(self, name) is not None:
             return timeutils.isotime(getattr(self, name))

@@ -13,10 +13,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import eventlet
 import os
 
+
 os.environ['EVENTLET_NO_GREENDNS'] = 'yes'
-
-import eventlet
-
 eventlet.monkey_patch(os=False)

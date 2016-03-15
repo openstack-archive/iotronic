@@ -1,5 +1,4 @@
 # coding=utf-8
-from time import sleep
 
 # Copyright 2013 Hewlett-Packard Development Company, L.P.
 # Copyright 2013 International Business Machines Corporation
@@ -18,8 +17,8 @@ from time import sleep
 #    under the License.
 """Conduct all activity related to bare-metal deployments.
 
-A single instance of :py:class:`iotronic.iotconductor.manager.ConductorManager` is
-created within the *iotronic-conductor* process, and is responsible for
+A single instance of :py:class:`iotronic.iotconductor.manager.ConductorManager`
+is created within the *iotronic-conductor* process, and is responsible for
 performing all actions on bare metal resources (Chassis, Nodes, and Ports).
 Commands are received via RPCs. The conductor service also performs periodic
 tasks, eg.  to monitor the status of active deployments.
@@ -41,36 +40,38 @@ Rebalancing this ring can trigger various actions by each conductor, such as
 building or tearing down the TFTP environment for a node, notifying Neutron of
 a change, etc.
 """
-'''
-import collections
+
 import datetime
+import eventlet
+from eventlet import greenpool
 import inspect
 import tempfile
 
+from iotronic.conductor import utils
+from iotronic.db import api as dbapi
 
 from iotronic.common import dhcp_factory
-
-
+from iotronic.common import exception
 from iotronic.common.glance_service import service_utils as glance_utils
-
+from iotronic.common import hash_ring as hash
 from iotronic.common import images
-from iotronic.common import rpc
+
+from iotronic.common.i18n import _
+from iotronic.common.i18n import _LC
+from iotronic.common.i18n import _LE
+from iotronic.common.i18n import _LI
+from iotronic.common.i18n import _LW
+# from iotronic.common import driver_factory
+
+
 from iotronic.common import states
 from iotronic.common import swift
-from iotronic.iotconductor import task_manager
-from iotronic.iotconductor import utils
-
+from iotronic.conductor import task_manager
+from iotronic import objects
 
 from iotronic.openstack.common import periodic_task
-'''
 
-import threading
-import eventlet
-from eventlet import greenpool
 
-from iotronic.db import api as dbapi
-from oslo_config import cfg
-from oslo_db import exception as db_exception
 from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_db import exception as db_exception
@@ -78,21 +79,20 @@ from oslo_log import log
 import oslo_messaging as messaging
 from oslo_utils import excutils
 from oslo_utils import uuidutils
-from iotronic.conductor import utils
-from iotronic import objects
 
-from iotronic.common import hash_ring as hash
-from iotronic.common.i18n import _
-from iotronic.common.i18n import _LC
-from iotronic.common.i18n import _LE
-from iotronic.common.i18n import _LI
-from iotronic.common.i18n import _LW
-#from iotronic.common import driver_factory
+import threading
 
-from iotronic.conductor import task_manager
+'''
+import collections
+
+from iotronic.common import rpc
 from iotronic.common import states
+
+from iotronic.iotconductor import task_manager
+from iotronic.iotconductor import utils
+
 from iotronic.openstack.common import periodic_task
-from iotronic.common import exception
+'''
 
 MANAGER_TOPIC = 'iotronic.conductor_manager'
 WORKER_SPAWN_lOCK = "conductor_worker_spawn"
@@ -602,10 +602,9 @@ def set_node_cleaning_steps(task):
     node.driver_internal_info = driver_internal_info
     node.clean_step = {}
     node.save()
-    
-    
-    
-##################### NEW
+
+
+# NEW
 
 
 class ConductorManager(periodic_task.PeriodicTasks):
@@ -623,8 +622,8 @@ class ConductorManager(periodic_task.PeriodicTasks):
         self.host = host
         self.topic = topic
         self.drivers = ['fake']
-        #self.power_state_sync_count = collections.defaultdict(int)
-        #self.notifier = rpc.get_notifier()
+        # self.power_state_sync_count = collections.defaultdict(int)
+        # self.notifier = rpc.get_notifier()
     '''
     def _get_driver(self, driver_name):
         """Get the driver.
@@ -640,6 +639,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
         except KeyError:
             raise exception.DriverNotFound(driver_name=driver_name)
     '''
+
     def init_host(self):
         self.dbapi = dbapi.get_instance()
 
@@ -655,10 +655,10 @@ class ConductorManager(periodic_task.PeriodicTasks):
 
         # NOTE(deva): instantiating DriverFactory may raise DriverLoadError
         #             or DriverNotFound
-        #self._driver_factory = driver_factory.DriverFactory()
-        #"""Driver factory loads all enabled drivers."""
-        
-        #self.drivers = self._driver_factory.names
+        # self._driver_factory = driver_factory.DriverFactory()
+        # """Driver factory loads all enabled drivers."""
+
+        # self.drivers = self._driver_factory.names
         """List of driver names which this conductor supports."""
         '''
         if not self.drivers:
@@ -678,20 +678,21 @@ class ConductorManager(periodic_task.PeriodicTasks):
                 if iface:
                     self._collect_periodic_tasks(iface)
         '''
-        
+
         # clear all locks held by this conductor before registering
-        #self.dbapi.clear_node_reservations_for_conductor(self.host)
+        # self.dbapi.clear_node_reservations_for_conductor(self.host)
         try:
             # Register this conductor with the cluster
-            cdr = self.dbapi.register_conductor({'hostname': self.host,'drivers': ['fake']})
+            cdr = self.dbapi.register_conductor(
+                {'hostname': self.host, 'drivers': ['fake']})
         except exception.ConductorAlreadyRegistered:
             # This conductor was already registered and did not shut down
             # properly, so log a warning and update the record.
             LOG.warn(_LW("A conductor with hostname %(hostname)s "
                          "was previously registered. Updating registration"),
                      {'hostname': self.host})
-            
-            #TO BE CHANGED
+
+            # TO BE CHANGED
             cdr = self.dbapi.register_conductor({'hostname': self.host,
                                                  'drivers': self.drivers},
                                                 update_existing=True)
@@ -707,11 +708,9 @@ class ConductorManager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception():
                 LOG.critical(_LC('Failed to start keepalive'))
                 self.del_host()
-        
-        from iotronic.wamp.rpcwampserver import RPC_Wamp_Server
-        RPC_Wamp_Server()
-        
 
+        # from iotronic.wamp.rpcwampserver import RPC_Wamp_Server
+        # RPC_Wamp_Server()
 
     def _collect_periodic_tasks(self, obj):
         for n, method in inspect.getmembers(obj, inspect.ismethod):
@@ -746,7 +745,6 @@ class ConductorManager(periodic_task.PeriodicTasks):
 
     @lockutils.synchronized(WORKER_SPAWN_lOCK, 'iotronic-')
     def _spawn_worker(self, func, *args, **kwargs):
-
         """Create a greenthread to run func(*args, **kwargs).
 
         Spawns a greenthread if there are free slots in pool, otherwise raises
@@ -1434,7 +1432,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                         action=action, node=task.node.uuid,
                         state=task.node.provision_state)
 
-    #@periodic_task.periodic_task(spacing=CONF.conductor.sync_power_state_interval)
+    # @periodic_task.periodic_task(spacing=CONF.conductor.sync_power_state_interval)
     def _sync_power_states(self, context):
         """Periodic task to sync power states for the nodes.
 
@@ -1502,7 +1500,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                 # Yield on every iteration
                 eventlet.sleep(0)
 
-    #@periodic_task.periodic_task(spacing=CONF.conductor.check_provision_state_interval)
+    # @periodic_task.periodic_task(spacing=CONF.conductor.check_provision_state_interval)
     def _check_deploy_timeouts(self, context):
         """Periodically checks whether a deploy RPC call has timed out.
 
@@ -1542,7 +1540,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
         task.node.conductor_affinity = self.conductor.id
         task.node.save()
 
-    #@periodic_task.periodic_task(spacing=CONF.conductor.sync_local_state_interval)
+    # @periodic_task.periodic_task(spacing=CONF.conductor.sync_local_state_interval)
     def _sync_local_state(self, context):
         """Perform any actions necessary to sync local state.
 
@@ -1616,7 +1614,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                        nodes
         :return: generator yielding tuples of requested fields
         """
-        columns = ['uuid',] + list(fields or ())
+        columns = ['uuid', ] + list(fields or ())
         node_list = self.dbapi.get_nodeinfo_list(columns=columns, **kwargs)
         for result in node_list:
             if self._mapped_to_this_conductor(*result[:2]):
@@ -1667,9 +1665,6 @@ class ConductorManager(periodic_task.PeriodicTasks):
                     ret_dict[iface_name]['reason'] = reason
         return ret_dict
 
-
-
-
     @messaging.expected_exceptions(exception.NodeLocked,
                                    exception.NodeAssociated,
                                    exception.InvalidState)
@@ -1691,7 +1686,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
             node.destroy()
             LOG.info(_LI('Successfully deleted node %(node)s.'),
                      {'node': node.uuid})
-            #if node.instance_uuid is not None:
+            # if node.instance_uuid is not None:
             #    raise exception.NodeAssociated(node=node.uuid,
             #                                   instance=node.instance_uuid)
 
@@ -1904,7 +1899,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
         driver = self._get_driver(driver_name)
         return driver.get_properties()
 
-    #@periodic_task.periodic_task(spacing=CONF.conductor.send_sensor_data_interval)
+    # @periodic_task.periodic_task(spacing=CONF.conductor.send_sensor_data_interval)
     def _send_sensor_data(self, context):
         """Periodically sends sensor data to Ceilometer."""
         # do nothing if send_sensor_data option is False
@@ -2128,7 +2123,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
                     action='inspect', node=task.node.uuid,
                     state=task.node.provision_state)
 
-    #@periodic_task.periodic_task(spacing=CONF.conductor.check_provision_state_interval)
+    # @periodic_task.periodic_task(spacing=CONF.conductor.check_provision_state_interval)
     def _check_inspect_timeouts(self, context):
         """Periodically checks inspect_timeout and fails upon reaching it.
 
@@ -2185,7 +2180,7 @@ class ConductorManager(periodic_task.PeriodicTasks):
             try:
                 with task_manager.acquire(context, node_uuid) as task:
                     if (task.node.maintenance or
-                        task.node.provision_state != provision_state):
+                            task.node.provision_state != provision_state):
                         continue
 
                     # timeout has been reached - process the event 'fail'

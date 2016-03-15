@@ -153,7 +153,7 @@ INSPECTFAIL = 'inspect failed'
 UPDATE_ALLOWED_STATES = (DEPLOYFAIL, INSPECTING, INSPECTFAIL, CLEANFAIL)
 """Transitional states in which we allow updating a node."""
 
-### NEW
+# NEW
 OPERATIVE = 'operative'
 MAINTENANCE = 'maintenance'
 

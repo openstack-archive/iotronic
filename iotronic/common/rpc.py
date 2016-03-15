@@ -13,6 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
+import oslo_messaging as messaging
+from oslo_serialization import jsonutils
+
+from iotronic.common import context as iotronic_context
+from iotronic.common import exception
+
 __all__ = [
     'init',
     'cleanup',
@@ -27,16 +34,8 @@ __all__ = [
     'TRANSPORT_ALIASES',
 ]
 
-from oslo_config import cfg
-import oslo_messaging as messaging
-from oslo_serialization import jsonutils
-
-from iotronic.common import context as iotronic_context
-from iotronic.common import exception
-
-
 CONF = cfg.CONF
-#print CONF.transport_url
+# print CONF.transport_url
 TRANSPORT = None
 NOTIFIER = None
 
@@ -92,6 +91,7 @@ def get_allowed_exmods():
 
 
 class JsonPayloadSerializer(messaging.NoOpSerializer):
+
     @staticmethod
     def serialize_entity(context, entity):
         return jsonutils.to_primitive(entity, convert_instances=True)
@@ -120,7 +120,7 @@ class RequestContextSerializer(messaging.Serializer):
 
 
 def get_transport_url(url_str=None):
-    #LOG.info('yoooooooooooo')
+    # LOG.info('yoooooooooooo')
     return messaging.TransportURL.parse(CONF, url_str, TRANSPORT_ALIASES)
 
 

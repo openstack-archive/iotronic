@@ -25,16 +25,19 @@ from iotronic.api import middleware
 
 
 api_opts = [
-    cfg.StrOpt('auth_strategy',
+    cfg.StrOpt(
+        'auth_strategy',
         default='keystone',
         help='Authentication strategy used by iotronic-api: one of "keystone" '
-             'or "noauth". "noauth" should not be used in a production '
-             'environment because all authentication will be disabled.'),
-    cfg.BoolOpt('pecan_debug',
-                default=False,
-                help=('Enable pecan debug mode. WARNING: this is insecure '
-                      'and should not be used in a production environment.')),
-    ]
+        'or "noauth". "noauth" should not be used in a production '
+        'environment because all authentication will be disabled.'),
+    cfg.BoolOpt(
+        'pecan_debug',
+        default=False,
+        help=(
+            'Enable pecan debug mode. WARNING: this is insecure '
+            'and should not be used in a production environment.')),
+]
 
 CONF = cfg.CONF
 CONF.register_opts(api_opts)
@@ -79,6 +82,7 @@ def setup_app(pecan_config=None, extra_hooks=None):
 
 
 class VersionSelectorApplication(object):
+
     def __init__(self):
         pc = get_pecan_config()
         pc.app.enable_acl = (CONF.auth_strategy == 'keystone')
