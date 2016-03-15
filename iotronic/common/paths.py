@@ -20,15 +20,11 @@ import os
 from oslo_config import cfg
 
 path_opts = [
-    cfg.StrOpt('pybasedir',
-               default=os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                    '../')),
-               help='Directory where the iotronic python module is installed.'),
-    cfg.StrOpt('bindir',
-               default='$pybasedir/bin',
+    cfg.StrOpt('pybasedir', default=os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                                 '../')), help='Directory where the iotronic module is installed.'),
+    cfg.StrOpt('bindir', default='$pybasedir/bin',
                help='Directory where iotronic binaries are installed.'),
-    cfg.StrOpt('state_path',
-               default='$pybasedir',
+    cfg.StrOpt('state_path', default='$pybasedir',
                help="Top-level directory for maintaining iotronic's state."),
 ]
 

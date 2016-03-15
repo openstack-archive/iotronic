@@ -107,6 +107,7 @@ def periodic_task(*args, **kwargs):
 
 
 class _PeriodicTasksMeta(type):
+
     def _add_periodic_task(cls, task):
         """Add a periodic task to the list of periodic tasks.
 
@@ -183,6 +184,7 @@ def _nearest_boundary(last_run, spacing):
 
 @six.add_metaclass(_PeriodicTasksMeta)
 class PeriodicTasks(object):
+
     def __init__(self):
         super(PeriodicTasks, self).__init__()
         self._periodic_last_run = {}

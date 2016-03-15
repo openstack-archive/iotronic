@@ -37,8 +37,8 @@ class DBHook(hooks.PecanHook):
     """Attach the dbapi object to the request so controllers can get to it."""
 
     def before(self, state):
-        
-        #state.request.dbapi = dbapi.get_instance()
+
+        # state.request.dbapi = dbapi.get_instance()
         pass
 
 
@@ -62,6 +62,7 @@ class ContextHook(hooks.PecanHook):
         or admin substring. Otherwise it is set to False.
 
     """
+
     def __init__(self, public_api_routes):
         self.public_api_routes = public_api_routes
         super(ContextHook, self).__init__()
@@ -112,6 +113,7 @@ class TrustedCallHook(hooks.PecanHook):
     tenant, domain or other administrative unit.
 
     """
+
     def before(self, state):
         ctx = state.request.context
         if ctx.is_public_api:
@@ -132,6 +134,7 @@ class NoExceptionTracebackHook(hooks.PecanHook):
     # 'on_error' never fired for wsme+pecan pair. wsme @wsexpose decorator
     # catches and handles all the errors, so 'on_error' dedicated for unhandled
     # exceptions never fired.
+
     def after(self, state):
         # Omit empty body. Some errors may not have body at this level yet.
         if not state.response.body:

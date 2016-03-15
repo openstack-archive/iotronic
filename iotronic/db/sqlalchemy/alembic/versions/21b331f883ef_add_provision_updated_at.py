@@ -28,7 +28,7 @@ import sqlalchemy as sa
 
 def upgrade():
     op.add_column('nodes', sa.Column('provision_updated_at', sa.DateTime(),
-                  nullable=True))
+                                     nullable=True))
 
 
 def downgrade():

@@ -28,7 +28,7 @@ import sqlalchemy as sa
 
 def upgrade():
     op.add_column('nodes', sa.Column('name', sa.String(length=63),
-                  nullable=True))
+                                     nullable=True))
     op.create_unique_constraint('uniq_nodes0name', 'nodes', ['name'])
 
 

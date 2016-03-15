@@ -28,7 +28,7 @@ import sqlalchemy as sa
 
 def upgrade():
     op.add_column('nodes', sa.Column('clean_step', sa.Text(),
-                  nullable=True))
+                                     nullable=True))
 
 
 def downgrade():

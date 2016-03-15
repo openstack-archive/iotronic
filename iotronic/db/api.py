@@ -177,7 +177,7 @@ class Connection(object):
         :returns: A node.
         """
     '''
-        
+
     @abc.abstractmethod
     def get_node_by_code(self, instance):
         """Return a node.
@@ -343,7 +343,7 @@ class Connection(object):
         :param chassis_id: The id or the uuid of a chassis.
         """
     '''
-        
+
     @abc.abstractmethod
     def register_conductor(self, values, update_existing=False):
         """Register an active conductor with the cluster.
@@ -405,9 +405,7 @@ class Connection(object):
         """
 
 
-
-
-###################### NEW #############################
+# ##################### NEW #############################
 
     @abc.abstractmethod
     def create_session(self, values):
@@ -415,7 +413,7 @@ class Connection(object):
 
         :param values: session_id.
         """
-        
+
     @abc.abstractmethod
     def update_session(self, session_id, values):
         """Update properties of an session.
@@ -423,15 +421,15 @@ class Connection(object):
         :param session_id: The id of a session.
         :param values: Dict of values to update.
         :returns: A session.
-        """     
-        
+        """
+
     @abc.abstractmethod
     def create_location(self, values):
         """Create a new location.
 
         :param values: Dict of values.
-        """   
-        
+        """
+
     @abc.abstractmethod
     def update_location(self, location_id, values):
         """Update properties of an location.
@@ -440,8 +438,7 @@ class Connection(object):
         :param values: Dict of values to update.
         :returns: A location.
         """
-    
-    
+
     @abc.abstractmethod
     def destroy_location(self, location_id):
         """Destroy an location.
@@ -451,7 +448,7 @@ class Connection(object):
 
     @abc.abstractmethod
     def get_locations_by_node_id(self, node_id, limit=None, marker=None,
-                             sort_key=None, sort_dir=None):
+                                 sort_key=None, sort_dir=None):
         """List all the locations for a given node.
 
         :param node_id: The integer node ID.

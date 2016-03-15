@@ -26,6 +26,6 @@ def parse_args(argv, default_config_files=None):
     cfg.CONF(argv[1:],
              project='iotronic',
              version=version.version_info.release_string(),
-             #version='2015.7',
+             # version='2015.7',
              default_config_files=default_config_files)
     rpc.init(cfg.CONF)
