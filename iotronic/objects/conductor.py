@@ -17,7 +17,6 @@
 from iotronic.common.i18n import _
 from iotronic.db import api as db_api
 from iotronic.objects import base
-from iotronic.objects import utils
 
 
 class Conductor(base.IotronicObject):
@@ -26,7 +25,6 @@ class Conductor(base.IotronicObject):
 
     fields = {
         'id': int,
-        'drivers': utils.list_or_none,
         'hostname': str,
     }
 
@@ -60,8 +58,7 @@ class Conductor(base.IotronicObject):
         """Loads and applies updates for this Conductor.
 
         Loads a :class:`Conductor` with the same uuid from the database and
-        checks for updated attributes. Updates are applied from
-        the loaded chassis column by column, if there are any updates.
+        checks for updated attributes.
 
         :param context: Security context. NOTE: This should only
                         be used internally by the indirection_api.

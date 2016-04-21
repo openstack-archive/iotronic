@@ -94,7 +94,7 @@ def get_keystone_url(auth_url, auth_version):
     return parse.urljoin(auth_url.rstrip('/'), api_version)
 
 
-def get_service_url(service_type='baremetal', endpoint_type='internal'):
+def get_service_url(service_type='iot', endpoint_type='internal'):
     """Wrapper for get service url from keystone service catalog.
 
     Given a service_type and an endpoint_type, this method queries keystone

@@ -16,9 +16,6 @@
 
 """SQLAlchemy storage backend."""
 
-import collections
-import datetime
-
 from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
@@ -31,7 +28,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from iotronic.common import exception
 from iotronic.common.i18n import _
-from iotronic.common.i18n import _LW
 from iotronic.common import states
 from iotronic.common import utils
 from iotronic.db import api
@@ -99,40 +95,6 @@ def add_identity_filter(query, value):
         raise exception.InvalidIdentity(identity=value)
 
 
-def add_port_filter(query, value):
-    """Adds a port-specific filter to a query.
-
-    Filters results by address, if supplied value is a valid MAC
-    address. Otherwise attempts to filter results by identity.
-
-    :param query: Initial query to add filter to.
-    :param value: Value for filtering results by.
-    :return: Modified query.
-    """
-    if utils.is_valid_mac(value):
-        return query.filter_by(address=value)
-    else:
-        return add_identity_filter(query, value)
-
-
-def add_port_filter_by_node(query, value):
-    if strutils.is_int_like(value):
-        return query.filter_by(node_id=value)
-    else:
-        query = query.join(models.Node,
-                           models.Port.node_id == models.Node.id)
-        return query.filter(models.Node.uuid == value)
-
-
-def add_node_filter_by_chassis(query, value):
-    if strutils.is_int_like(value):
-        return query.filter_by(chassis_id=value)
-    else:
-        query = query.join(models.Chassis,
-                           models.Node.chassis_id == models.Chassis.id)
-        return query.filter(models.Chassis.uuid == value)
-
-
 def _paginate_query(model, limit=None, marker=None, sort_key=None,
                     sort_dir=None, query=None):
     if not query:
@@ -148,8 +110,6 @@ def _paginate_query(model, limit=None, marker=None, sort_key=None,
             _('The sort_key value "%(key)s" is an invalid field for sorting')
             % {'key': sort_key})
     return query.all()
-
-# NEW
 
 
 def add_location_filter_by_node(query, value):
@@ -171,38 +131,11 @@ class Connection(api.Connection):
         if filters is None:
             filters = []
 
-        if 'chassis_uuid' in filters:
-            # get_chassis_by_uuid() to raise an exception if the chassis
-            # is not found
-            chassis_obj = self.get_chassis_by_uuid(filters['chassis_uuid'])
-            query = query.filter_by(chassis_id=chassis_obj.id)
         if 'associated' in filters:
             if filters['associated']:
                 query = query.filter(models.Node.instance_uuid is not None)
             else:
                 query = query.filter(models.Node.instance_uuid is None)
-        """
-        if 'reserved' in filters:
-            if filters['reserved']:
-                query = query.filter(models.Node.reservation != None)
-            else:
-                query = query.filter(models.Node.reservation == None)
-        """
-        if 'maintenance' in filters:
-            query = query.filter_by(maintenance=filters['maintenance'])
-        if 'driver' in filters:
-            query = query.filter_by(driver=filters['driver'])
-        if 'provision_state' in filters:
-            query = query.filter_by(provision_state=filters['provision_state'])
-        if 'provisioned_before' in filters:
-            limit = (timeutils.utcnow() -
-                     datetime.timedelta(seconds=filters['provisioned_before']))
-            query = query.filter(models.Node.provision_updated_at < limit)
-        if 'inspection_started_before' in filters:
-            limit = ((timeutils.utcnow()) -
-                     (datetime.timedelta(
-                         seconds=filters['inspection_started_before'])))
-            query = query.filter(models.Node.inspection_started_at < limit)
 
         return query
 
@@ -226,46 +159,6 @@ class Connection(api.Connection):
         query = self._add_nodes_filters(query, filters)
         return _paginate_query(models.Node, limit, marker,
                                sort_key, sort_dir, query)
-
-    """
-    def reserve_node(self, tag, node_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Node, session=session)
-            query = add_identity_filter(query, node_id)
-            # be optimistic and assume we usually create a reservation
-            count = query.filter_by(reservation=None).update(
-                {'reservation': tag}, synchronize_session=False)
-            try:
-                node = query.one()
-                if count != 1:
-                    # Nothing updated and node exists. Must already be
-                    # locked.
-                    raise exception.NodeLocked(node=node_id,
-                                               host=node['reservation'])
-                return node
-            except NoResultFound:
-                raise exception.NodeNotFound(node_id)
-
-    def release_node(self, tag, node_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Node, session=session)
-            query = add_identity_filter(query, node_id)
-            # be optimistic and assume we usually release a reservation
-            count = query.filter_by(reservation=tag).update(
-                {'reservation': None}, synchronize_session=False)
-            try:
-                if count != 1:
-                    node = query.one()
-                    if node['reservation'] is None:
-                        raise exception.NodeNotLocked(node=node_id)
-                    else:
-                        raise exception.NodeLocked(node=node_id,
-                                                   host=node['reservation'])
-            except NoResultFound:
-                raise exception.NodeNotFound(node_id)
-    """
 
     def create_node(self, values):
         # ensure defaults are present for new nodes
@@ -311,21 +204,6 @@ class Connection(api.Connection):
             return query.one()
         except NoResultFound:
             raise exception.NodeNotFound(node=node_code)
-    '''
-    def get_node_by_instance(self, instance):
-        if not uuidutils.is_uuid_like(instance):
-            raise exception.InvalidUUID(uuid=instance)
-
-        query = (model_query(models.Node)
-                 .filter_by(instance_uuid=instance))
-
-        try:
-            result = query.one()
-        except NoResultFound:
-            raise exception.InstanceNotFound(instance=instance)
-
-        return result
-    '''
 
     def destroy_node(self, node_id):
 
@@ -349,28 +227,6 @@ class Connection(api.Connection):
             location_query.delete()
 
             query.delete()
-        """
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Node, session=session)
-            query = add_identity_filter(query, node_id)
-
-            try:
-                node_ref = query.one()
-            except NoResultFound:
-                raise exception.NodeNotFound(node=node_id)
-
-            # Get node ID, if an UUID was supplied. The ID is
-            # required for deleting all ports, attached to the node.
-            if uuidutils.is_uuid_like(node_id):
-                node_id = node_ref['id']
-
-            #port_query = model_query(models.Port, session=session)
-            #port_query = add_port_filter_by_node(port_query, node_id)
-            #port_query.delete()
-
-            query.delete()
-        """
 
     def update_node(self, node_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
@@ -422,149 +278,6 @@ class Connection(api.Connection):
 
             ref.update(values)
         return ref
-    """
-    def get_port_by_id(self, port_id):
-        query = model_query(models.Port).filter_by(id=port_id)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.PortNotFound(port=port_id)
-
-    def get_port_by_uuid(self, port_uuid):
-        query = model_query(models.Port).filter_by(uuid=port_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.PortNotFound(port=port_uuid)
-
-    def get_port_by_address(self, address):
-        query = model_query(models.Port).filter_by(address=address)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.PortNotFound(port=address)
-
-    def get_port_list(self, limit=None, marker=None,
-                      sort_key=None, sort_dir=None):
-        return _paginate_query(models.Port, limit, marker,
-                               sort_key, sort_dir)
-
-    def get_ports_by_node_id(self, node_id, limit=None, marker=None,
-                             sort_key=None, sort_dir=None):
-        query = model_query(models.Port)
-        query = query.filter_by(node_id=node_id)
-        return _paginate_query(models.Port, limit, marker,
-                               sort_key, sort_dir, query)
-
-    def create_port(self, values):
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
-        port = models.Port()
-        port.update(values)
-        try:
-            port.save()
-        except db_exc.DBDuplicateEntry as exc:
-            if 'address' in exc.columns:
-                raise exception.MACAlreadyExists(mac=values['address'])
-            raise exception.PortAlreadyExists(uuid=values['uuid'])
-        return port
-
-    def update_port(self, port_id, values):
-        # NOTE(dtantsur): this can lead to very strange errors
-        if 'uuid' in values:
-            msg = _("Cannot overwrite UUID for an existing Port.")
-            raise exception.InvalidParameterValue(err=msg)
-
-        session = get_session()
-        try:
-            with session.begin():
-                query = model_query(models.Port, session=session)
-                query = add_port_filter(query, port_id)
-                ref = query.one()
-                ref.update(values)
-        except NoResultFound:
-            raise exception.PortNotFound(port=port_id)
-        except db_exc.DBDuplicateEntry:
-            raise exception.MACAlreadyExists(mac=values['address'])
-        return ref
-
-    def destroy_port(self, port_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Port, session=session)
-            query = add_port_filter(query, port_id)
-            count = query.delete()
-            if count == 0:
-                raise exception.PortNotFound(port=port_id)
-
-    def get_chassis_by_id(self, chassis_id):
-        query = model_query(models.Chassis).filter_by(id=chassis_id)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ChassisNotFound(chassis=chassis_id)
-
-    def get_chassis_by_uuid(self, chassis_uuid):
-        query = model_query(models.Chassis).filter_by(uuid=chassis_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ChassisNotFound(chassis=chassis_uuid)
-
-    def get_chassis_list(self, limit=None, marker=None,
-                         sort_key=None, sort_dir=None):
-        return _paginate_query(models.Chassis, limit, marker,
-                               sort_key, sort_dir)
-
-    def create_chassis(self, values):
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
-        chassis = models.Chassis()
-        chassis.update(values)
-        try:
-            chassis.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ChassisAlreadyExists(uuid=values['uuid'])
-        return chassis
-
-    def update_chassis(self, chassis_id, values):
-        # NOTE(dtantsur): this can lead to very strange errors
-        if 'uuid' in values:
-            msg = _("Cannot overwrite UUID for an existing Chassis.")
-            raise exception.InvalidParameterValue(err=msg)
-
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Chassis, session=session)
-            query = add_identity_filter(query, chassis_id)
-
-            count = query.update(values)
-            if count != 1:
-                raise exception.ChassisNotFound(chassis=chassis_id)
-            ref = query.one()
-        return ref
-
-    def destroy_chassis(self, chassis_id):
-        def chassis_not_empty(session):
-            #Checks whether the chassis does not have nodes.
-
-            query = model_query(models.Node, session=session)
-            query = add_node_filter_by_chassis(query, chassis_id)
-
-            return query.count() != 0
-
-        session = get_session()
-        with session.begin():
-            if chassis_not_empty(session):
-                raise exception.ChassisNotEmpty(chassis=chassis_id)
-
-            query = model_query(models.Chassis, session=session)
-            query = add_identity_filter(query, chassis_id)
-
-            count = query.delete()
-            if count != 1:
-                raise exception.ChassisNotFound(chassis=chassis_id)
-    """
 
     def register_conductor(self, values, update_existing=False):
         session = get_session()
@@ -615,39 +328,6 @@ class Connection(api.Connection):
             if count == 0:
                 raise exception.ConductorNotFound(conductor=hostname)
 
-    def clear_node_reservations_for_conductor(self, hostname):
-        session = get_session()
-        nodes = []
-        with session.begin():
-            query = (model_query(models.Node, session=session)
-                     .filter_by(reservation=hostname))
-            nodes = [node['uuid'] for node in query]
-            query.update({'reservation': None})
-
-        if nodes:
-            nodes = ', '.join(nodes)
-            LOG.warn(_LW('Cleared reservations held by %(hostname)s: '
-                         '%(nodes)s'), {'hostname': hostname, 'nodes': nodes})
-
-    def get_active_driver_dict(self, interval=None):
-        if interval is None:
-            interval = CONF.conductor.heartbeat_timeout
-
-        limit = timeutils.utcnow() - datetime.timedelta(seconds=interval)
-        result = (model_query(models.Conductor)
-                  .filter_by(online=True)
-                  .filter(models.Conductor.updated_at >= limit)
-                  .all())
-
-        # build mapping of drivers to the set of hosts which support them
-        d2c = collections.defaultdict(set)
-        for row in result:
-            for driver in row['drivers']:
-                d2c[driver].add(row['hostname'])
-        return d2c
-
-
-# ##################### NEW #############################
     def create_session(self, values):
         session = models.SessionWP()
         session.update(values)

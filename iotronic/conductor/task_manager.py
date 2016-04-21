@@ -48,18 +48,6 @@ attributes that you may access:
         'shared' kwarg arg of TaskManager())
     task.node
         The Node object
-    task.ports
-        Ports belonging to the Node
-    task.driver
-        The Driver for the Node, or the Driver based on the
-        'driver_name' kwarg of TaskManager().
-
-Example usage:
-
-::
-
-    with task_manager.acquire(context, node_id) as task:
-        task.driver.power.power_on(task.node)
 
 If you need to execute task-requiring code in a background thread, the
 TaskManager instance provides an interface to handle this for you, making
@@ -175,7 +163,6 @@ class TaskManager(object):
         self._on_error_method = None
 
         self.context = context
-        # self.node = None
         self.node = None
         self.shared = shared
 
@@ -200,19 +187,7 @@ class TaskManager(object):
             else:
             """
             self.node = objects.Node.get(context, node_id)
-            # self.ports = objects.Port.list_by_node_id(context, self.node.id)
-            # self.driver = driver_factory.get_driver(driver_name or
-            #                                       self.node.driver)
 
-            # NOTE(deva): this handles the Juno-era NOSTATE state
-            #             and should be deleted after Kilo is released
-            '''
-            if self.node.provision_state is states.NOSTATE:
-                self.node.provision_state = states.AVAILABLE
-                self.node.save()
-
-            self.fsm.initialize(self.node.provision_state)
-            '''
         except Exception:
             with excutils.save_and_reraise_exception():
                 self.release_resources()

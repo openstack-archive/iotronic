@@ -60,8 +60,8 @@ class Root(base.APIBase):
     def convert():
         root = Root()
         root.name = "OpenStack Iotronic API"
-        root.description = ("Iotronic is an OpenStack project which aims to "
-                            "provision baremetal machines.")
+        root.description = ("IoTronic is an Internet of Things resource \
+            management service for OpenStack clouds.")
         root.versions = [Version.convert('v1')]
         root.default_version = Version.convert('v1')
         return root
