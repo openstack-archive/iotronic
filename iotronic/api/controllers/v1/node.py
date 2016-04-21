@@ -59,27 +59,6 @@ class Node(base.APIBase):
         list_loc = objects.Location({}).list_by_node_id({}, node.id)
         node.location = loc.Location.convert_with_list(list_loc)
 
-        '''
-        else:
-            if not show_password:
-                node.driver_info = ast.literal_eval(strutils.mask_password(
-                                                    node.driver_info,
-                                                    "******"))
-            node.ports = [link.Link.make_link('self', url, 'nodes',
-                                              node.uuid + "/ports"),
-                          link.Link.make_link('bookmark', url, 'nodes',
-                                              node.uuid + "/ports",
-                                              bookmark=True)
-                          ]
-
-        node.chassis_id = wtypes.Unset
-
-        node.links = [link.Link.make_link('self', url, 'nodes',
-                                          node.uuid),
-                      link.Link.make_link('bookmark', url, 'nodes',
-                                          node.uuid, bookmark=True)
-                      ]
-        '''
         return node
 
     @classmethod
@@ -124,8 +103,7 @@ class NodesController(rest.RestController):
 
     invalid_sort_key_list = ['properties']
 
-    def _get_nodes_collection(self, chassis_uuid, instance_uuid, associated,
-                              maintenance, marker, limit, sort_key, sort_dir,
+    def _get_nodes_collection(self, marker, limit, sort_key, sort_dir,
                               expand=False, resource_url=None):
 
         limit = api_utils.validate_limit(limit)
@@ -141,58 +119,28 @@ class NodesController(rest.RestController):
                 _("The sort_key value %(key)s is an invalid field for "
                   "sorting") % {'key': sort_key})
 
-        if instance_uuid:
-            nodes = self._get_nodes_by_instance(instance_uuid)
-        else:
-            filters = {}
-            '''
-            if chassis_uuid:
-                filters['chassis_uuid'] = chassis_uuid
-            if associated is not None:
-                filters['associated'] = associated
-            if maintenance is not None:
-                filters['maintenance'] = maintenance
-            '''
-            nodes = objects.Node.list(pecan.request.context, limit, marker_obj,
-                                      sort_key=sort_key, sort_dir=sort_dir,
-                                      filters=filters)
+        filters = {}
+        nodes = objects.Node.list(pecan.request.context, limit, marker_obj,
+                                  sort_key=sort_key, sort_dir=sort_dir,
+                                  filters=filters)
 
         parameters = {'sort_key': sort_key, 'sort_dir': sort_dir}
-        '''
-        if associated:
-            parameters['associated'] = associated
-        if maintenance:
-            parameters['maintenance'] = maintenance
-        '''
         return NodeCollection.convert_with_locates(nodes, limit,
                                                    url=resource_url,
                                                    expand=expand,
                                                    **parameters)
 
-    @expose.expose(NodeCollection, types.uuid, types.uuid, types.boolean,
-                   types.boolean, types.uuid, int, wtypes.text, wtypes.text)
-    def get_all(self, chassis_uuid=None, instance_uuid=None, associated=None,
-                maintenance=None, marker=None, limit=None, sort_key='id',
+    @expose.expose(NodeCollection, types.uuid, int, wtypes.text, wtypes.text)
+    def get_all(self, marker=None, limit=None, sort_key='id',
                 sort_dir='asc'):
         """Retrieve a list of nodes.
 
-        :param chassis_uuid: Optional UUID of a chassis, to get only nodes for
-                           that chassis.
-        :param instance_uuid: Optional UUID of an instance, to find the node
-                              associated with that instance.
-        :param associated: Optional boolean whether to return a list of
-                           associated or unassociated nodes. May be combined
-                           with other parameters.
-        :param maintenance: Optional boolean value that indicates whether
-                            to get nodes in maintenance mode ("True"), or not
-                            in maintenance mode ("False").
         :param marker: pagination marker for large data sets.
         :param limit: maximum number of resources to return in a single result.
         :param sort_key: column to sort results by. Default: id.
         :param sort_dir: direction to sort. "asc" or "desc". Default: asc.
         """
-        return self._get_nodes_collection(chassis_uuid, instance_uuid,
-                                          associated, maintenance, marker,
+        return self._get_nodes_collection(marker,
                                           limit, sort_key, sort_dir)
 
     @expose.expose(Node, types.uuid_or_name)
@@ -213,15 +161,8 @@ class NodesController(rest.RestController):
         :param node_ident: UUID or logical name of a node.
         """
         rpc_node = api_utils.get_rpc_node(node_ident)
-
-        try:
-            topic = pecan.request.rpcapi.get_topic_for(rpc_node)
-        except exception.NoValidHost as e:
-            e.code = 400
-            raise e
-
         pecan.request.rpcapi.destroy_node(pecan.request.context,
-                                          rpc_node.uuid, topic)
+                                          rpc_node.uuid)
 
     @expose.expose(Node, body=Node, status_code=201)
     def post(self, Node):
@@ -254,5 +195,4 @@ class NodesController(rest.RestController):
         new_Location.node_id = new_Node.id
         new_Location.create()
 
-        # pecan.response.location = link.build_url('Nodes', new_Node.uuid)
         return Node.convert_with_locates(new_Node)

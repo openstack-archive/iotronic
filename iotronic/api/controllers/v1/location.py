@@ -43,23 +43,3 @@ class Location(base.APIBase):
         for l in list:
             list_locations.append(Location(**l.as_dict()))
         return list_locations
-
-'''
-class LocationCollection(collection.Collection):
-    """API representation of a collection of locations."""
-
-    locations = [Location]
-    """A list containing locations objects"""
-
-    def __init__(self, **kwargs):
-        self._type = 'locations'
-
-    @staticmethod
-    def convert_with_locates(locations,
-        limit, url=None, expand=False, **kwargs):
-        collection = LocationCollection()
-        collection.locations = [Location.convert_with_locates(n, expand)
-            for n in locations]
-        collection.next = collection.get_next(limit, url=url, **kwargs)
-        return collection
-'''

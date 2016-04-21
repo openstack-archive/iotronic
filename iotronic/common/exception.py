@@ -147,10 +147,6 @@ class MACAlreadyExists(Conflict):
     message = _("A port with MAC address %(mac)s already exists.")
 
 
-class ChassisAlreadyExists(Conflict):
-    message = _("A chassis with UUID %(uuid)s already exists.")
-
-
 class PortAlreadyExists(Conflict):
     message = _("A port with UUID %(uuid)s already exists.")
 
@@ -281,10 +277,6 @@ class FailedToUpdateMacOnPort(IotronicException):
     message = _("Update MAC address on port: %(port_id)s failed.")
 
 
-class ChassisNotFound(NotFound):
-    message = _("Chassis %(chassis)s could not be found.")
-
-
 class NoDriversLoaded(IotronicException):
     message = _("Conductor %(conductor)s cannot be started "
                 "because no drivers were loaded.")
@@ -319,11 +311,6 @@ class NodeConsoleNotEnabled(Invalid):
 class NodeInMaintenance(Invalid):
     message = _("The %(op)s operation can't be performed on node "
                 "%(node)s because it's in maintenance mode.")
-
-
-class ChassisNotEmpty(Invalid):
-    message = _("Cannot complete the requested action because chassis "
-                "%(chassis)s contains nodes.")
 
 
 class IPMIFailure(IotronicException):

@@ -107,17 +107,6 @@ class Node(base.IotronicObject):
         return node
 
     @base.remotable_classmethod
-    def get_by_instance_uuid(cls, context, instance_uuid):
-        """Find a node based on the instance uuid and return a Node object.
-
-        :param uuid: the uuid of the instance.
-        :returns: a :class:`Node` object.
-        """
-        db_node = cls.dbapi.get_node_by_instance(instance_uuid)
-        node = Node._from_db_object(cls(context), db_node)
-        return node
-
-    @base.remotable_classmethod
     def list(cls, context, limit=None, marker=None, sort_key=None,
              sort_dir=None, filters=None):
         """Return a list of Node objects.
@@ -218,10 +207,6 @@ class Node(base.IotronicObject):
                         object, e.g.: Node(context)
         """
         updates = self.obj_get_changes()
-        if 'driver' in updates and 'driver_internal_info' not in updates:
-            # Clean driver_internal_info when changes driver
-            self.driver_internal_info = {}
-            updates = self.obj_get_changes()
         self.dbapi.update_node(self.uuid, updates)
         self.obj_reset_changes()
 
