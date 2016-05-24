@@ -4,9 +4,7 @@ iotronic
 
 IoTronic is an Internet of Things resource management service for OpenStack clouds.
 
-Please feel here a long description which must be at least 3 lines wrapped on
-80 cols, so that distribution package maintainers can use it in their packages.
-Note that this is a hard requirement.
+IoTronic allows to manage Internet of Things resources as part of an OpenStack data center.
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/iotronic
