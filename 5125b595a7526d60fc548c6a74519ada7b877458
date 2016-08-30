@@ -1,0 +1,8 @@
+Code-Review+2: Francesco Longo <flongo@unime.it>
+Workflow+1: Francesco Longo <flongo@unime.it>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 30 Aug 2016 17:50:25 +0000
+Reviewed-on: https://review.openstack.org/359655
+Project: openstack/iotronic
+Branch: refs/heads/master
