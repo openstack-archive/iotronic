@@ -1,2 +1,1 @@
-s4t-server-node/node_modules
-s4t-server-node/lib/node_modules
+.tox
