@@ -1,0 +1,8 @@
+Code-Review+2: Fabio Verboso <fverboso@unime.it>
+Workflow+1: Fabio Verboso <fverboso@unime.it>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 07 Feb 2017 12:30:42 +0000
+Reviewed-on: https://review.openstack.org/430225
+Project: openstack/iotronic
+Branch: refs/heads/master
