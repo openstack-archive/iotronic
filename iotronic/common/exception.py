@@ -289,6 +289,13 @@ class ConductorNotFound(NotFound):
 class ConductorAlreadyRegistered(IotronicException):
     message = _("Conductor %(conductor)s already registered.")
 
+class WampAgentNotFound(NotFound):
+    message = _("WampAgent %(wampagent)s could not be found.")
+
+
+class WampAgentAlreadyRegistered(IotronicException):
+    message = _("WampAgent %(wampagent)s already registered.")
+
 
 class PowerStateFailure(InvalidState):
     message = _("Failed to set node power state to %(pstate)s.")

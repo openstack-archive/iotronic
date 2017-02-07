@@ -124,6 +124,18 @@ class Conductor(Base):
     hostname = Column(String(255), nullable=False)
     online = Column(Boolean, default=True)
 
+class WampAgent(Base):
+    """Represents a wampagent service entry."""
+
+    __tablename__ = 'wampagents'
+    __table_args__ = (
+        schema.UniqueConstraint('hostname', name='uniq_wampagentss0hostname'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    hostname = Column(String(255), nullable=False)
+    online = Column(Boolean, default=True)
+
 
 class Node(Base):
     """Represents a Node."""

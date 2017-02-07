@@ -23,4 +23,4 @@ from iotronic.wamp.agent import WampAgent
 
 if __name__ == '__main__':
     
-    wa=WampAgent()
+    wa=WampAgent('agent')

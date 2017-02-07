@@ -16,6 +16,9 @@
 from autobahn.twisted import wamp
 from autobahn.twisted import websocket
 from autobahn.wamp import types
+from iotronic.common.i18n import _LW
+from iotronic.common import exception
+from iotronic.db import api as dbapi
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
@@ -41,7 +44,7 @@ CONF.register_opts(wamp_opts, 'wamp')
 
 shared_result = {}
 wamp_session_caller = None
-AGENT_UUID = None
+AGENT_HOST = None
 
 
 def wamp_request(e, kwarg, session):
@@ -92,7 +95,7 @@ class WampEndpoint(object):
 
 class WampFrontend(wamp.ApplicationSession):
     def onJoin(self, details):
-        global wamp_session_caller, AGENT_UUID
+        global wamp_session_caller, AGENT_HOST
         wamp_session_caller = self
         import iotronic.wamp.registerd_functions as fun
 
@@ -101,7 +104,7 @@ class WampFrontend(wamp.ApplicationSession):
 
         try:
             self.register(fun.registration, u'stack4things.register')
-            self.register(fun.echo, AGENT_UUID + u'.stack4things.echo')
+            self.register(fun.echo, AGENT_HOST + u'.stack4things.echo')
             LOG.info("procedure registered")
         except Exception as e:
             LOG.error("could not register procedure: {0}".format(e))
@@ -130,16 +133,17 @@ class WampClientFactory(websocket.WampWebSocketClientFactory,
 
 
 class RPCServer(Thread):
-    def __init__(self, agent_uuid):
+    def __init__(self):
+        global AGENT_HOST
 
         # AMQP CONFIG
         endpoints = [
-            WampEndpoint(WampFrontend, agent_uuid),
+            WampEndpoint(WampFrontend, AGENT_HOST),
         ]
 
         Thread.__init__(self)
         transport = oslo_messaging.get_transport(CONF)
-        target = oslo_messaging.Target(topic=agent_uuid + '.s4t_invoke_wamp',
+        target = oslo_messaging.Target(topic=AGENT_HOST + '.s4t_invoke_wamp',
                                        server='server1')
 
         self.server = oslo_messaging.get_rpc_server(transport,
@@ -184,16 +188,39 @@ class WampManager(object):
 
 
 class WampAgent(object):
-    def __init__(self):
+    def __init__(self,host):
+
         logging.register_options(CONF)
         CONF(project='iotronic')
         logging.setup(CONF, "iotronic-wamp-agent")
 
-        agent_uuid = 'agent'
-        global AGENT_UUID
-        AGENT_UUID = agent_uuid
+        #to be removed asap
+        self.host = host
+        self.dbapi = dbapi.get_instance()
 
-        r = RPCServer(agent_uuid)
+        try:
+            wpa = self.dbapi.register_wampagent(
+                {'hostname': self.host})
+
+        except exception.ConductorAlreadyRegistered:
+            LOG.warn(_LW("A conductor with hostname %(hostname)s "
+                         "was previously registered. Updating registration"),
+                     {'hostname': self.host})
+
+        except exception.WampAgentAlreadyRegistered:
+            LOG.warn(_LW("A wampagent with hostname %(hostname)s "
+                         "was previously registered. Updating registration"),
+                     {'hostname': self.host})
+
+        wpa = self.dbapi.register_wampagent({'hostname': self.host},
+                                                update_existing=True)
+        self.wampagent = wpa
+
+
+        global AGENT_HOST
+        AGENT_HOST = self.host
+
+        r = RPCServer()
         w = WampManager()
 
         try:

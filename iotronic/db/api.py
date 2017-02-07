@@ -241,3 +241,28 @@ class Connection(object):
                          (asc, desc)
         :returns: A list of locations.
         """
+
+    @abc.abstractmethod
+    def get_wampagent(self, hostname):
+        """Retrieve a wampagent's service record from the database.
+
+        :param hostname: The hostname of the wampagent service.
+        :returns: A wampagent.
+        :raises: WampAgentNotFound
+        """
+
+    @abc.abstractmethod
+    def unregister_wampagent(self, hostname):
+        """Remove this wampagent from the service registry immediately.
+
+        :param hostname: The hostname of this wampagent service.
+        :raises: WampAgentNotFound
+        """
+
+    @abc.abstractmethod
+    def touch_wampagent(self, hostname):
+        """Mark a wampagent as active by updating its 'updated_at' property.
+
+        :param hostname: The hostname of this wampagent service.
+        :raises: WampAgentNotFound
+        """

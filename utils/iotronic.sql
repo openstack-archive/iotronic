@@ -35,6 +35,23 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 6
 DEFAULT CHARACTER SET = utf8;
 
+-- -----------------------------------------------------
+-- Table `iotronic`.`wampagents`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `iotronic`.`wampagents` ;
+
+CREATE TABLE IF NOT EXISTS `iotronic`.`wampagents` (
+  `created_at` DATETIME NULL DEFAULT NULL,
+  `updated_at` DATETIME NULL DEFAULT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `hostname` VARCHAR(255) NOT NULL,
+  `online` TINYINT(1) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uniq_wampagents0hostname` (`hostname` ASC))
+ENGINE = InnoDB
+AUTO_INCREMENT = 6
+DEFAULT CHARACTER SET = utf8;
+
 
 -- -----------------------------------------------------
 -- Table `iotronic`.`nodes`
