@@ -23,6 +23,7 @@ import oslo_messaging
 LOG = logging.getLogger(__name__)
 
 
+
 class ConductorAPI(object):
     """Client side of the conductor RPC API.
 
@@ -114,3 +115,9 @@ class ConductorAPI(object):
         """
         cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
         return cctxt.call(context, 'destroy_node', node_id=node_id)
+
+    def execute_on_board(self, context, board, wamp_rpc_call, wamp_rpc_args=None,topic=None):
+
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'execute_on_board', board=board,
+                            wamp_rpc_call=wamp_rpc_call, wamp_rpc_args=wamp_rpc_args)

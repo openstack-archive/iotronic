@@ -16,6 +16,8 @@ from iotronic.common import exception
 from iotronic import objects
 from iotronic.objects import base as objects_base
 from oslo_log import log as logging
+import oslo_messaging
+from oslo_config import cfg
 
 
 LOG = logging.getLogger(__name__)
@@ -24,6 +26,15 @@ serializer = objects_base.IotronicObjectSerializer()
 
 
 class ConductorEndpoint(object):
+
+    def __init__(self):
+        transport_url = 'rabbit://openstack:0penstack@controller:5672'
+        transport = oslo_messaging.get_transport(cfg.CONF, transport_url)
+        self.target = oslo_messaging.Target()
+        self.wamp_agent_client = oslo_messaging.RPCClient(transport,self.target)
+
+
+
     def echo(self, ctx, data):
         LOG.info("ECHO: %s" % data)
         return data
@@ -69,3 +80,22 @@ class ConductorEndpoint(object):
         new_location.create()
 
         return serializer.serialize_entity(ctx, new_node)
+
+    def execute_on_board(self,ctx, board, wamp_rpc_call, wamp_rpc_args):
+
+        LOG.debug('Executing \"%s\" on the board: %s', wamp_rpc_call, board)
+
+        uuid_agent = 'agent'
+
+        s4t_topic = 's4t_invoke_wamp'
+        full_topic = uuid_agent + '.' + s4t_topic
+
+        ctxt = {}
+
+        self.target.topic=full_topic
+        self.wamp_agent_client.prepare(timeout=10)
+
+        full_wamp_call = 'iotronic.' + board + "." + wamp_rpc_call
+
+        return self.wamp_agent_client.call(ctxt, full_topic, wamp_rpc_call=full_wamp_call, data=wamp_rpc_args)
+
