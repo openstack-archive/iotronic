@@ -17,10 +17,11 @@ from iotronic.common.i18n import _LI
 from iotronic.common.i18n import _LW
 from iotronic.conductor import endpoints as endp
 from iotronic.db import api as dbapi
+import os
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
-import time
+import signal
 
 LOG = logging.getLogger(__name__)
 
@@ -50,6 +51,8 @@ class ConductorManager(object):
         logging.register_options(CONF)
         CONF(project='iotronic')
         logging.setup(CONF, "iotronic-conductor")
+
+        signal.signal(signal.SIGINT, self.stop_handler)
 
         if not host:
             host = CONF.host
@@ -81,18 +84,21 @@ class ConductorManager(object):
         endpoints = [
             endp.ConductorEndpoint(ragent),
         ]
-        server = oslo_messaging.get_rpc_server(transport, target, endpoints,
+        self.server = oslo_messaging.get_rpc_server(transport, target, endpoints,
                                                executor='threading')
 
-        try:
-            server.start()
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("Stopping server")
+        self.server.start()
+        self.server.wait()
+        """
+        while True:
+            time.sleep(1)
+        """
 
-        server.stop()
-        # server.wait()
+    def stop_handler(self,signum, frame):
+        LOG.info("Stopping server")
+        self.server.stop()
+        self.del_host()
+        os._exit(0)
 
     def del_host(self, deregister=True):
         if deregister:

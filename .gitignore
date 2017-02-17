@@ -2,3 +2,4 @@
 .idea
 iotronic.egg-info
 build
+*.pyc

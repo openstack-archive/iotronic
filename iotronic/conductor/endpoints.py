@@ -21,16 +21,18 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 
+import random
+
 LOG = logging.getLogger(__name__)
 
 serializer = objects_base.IotronicObjectSerializer()
 
 
 def get_best_agent(ctx):
-    agents = objects.WampAgent.list(ctx, filters=[{'online': True}])
-    agent = agents.pop(0)
+    agents = objects.WampAgent.list(ctx, filters={'online': True})
+    LOG.debug('found %d Agent(s).', len(agents))
+    agent=random.choice(agents)
     LOG.debug('Selected agent: %s', agent.hostname)
-    agents.append(agent)
     return agent.hostname
 
 
@@ -40,6 +42,7 @@ class ConductorEndpoint(object):
         self.target = oslo_messaging.Target()
         self.wamp_agent_client = oslo_messaging.RPCClient(transport,
                                                           self.target)
+        self.wamp_agent_client.prepare(timeout=10)
         self.ragent = ragent
 
     def echo(self, ctx, data):
@@ -47,7 +50,7 @@ class ConductorEndpoint(object):
         return data
 
     def registration_uuid(self, ctx, uuid, session_num):
-        LOG.debug('Receved registration from %s with session %s',
+        LOG.debug('Received registration from %s with session %s',
                   uuid, session_num)
         try:
             node = objects.Node.get_by_uuid(ctx, uuid)
@@ -73,7 +76,7 @@ class ConductorEndpoint(object):
         return
 
     def registration(self, ctx, code, session_num):
-        LOG.debug('Receved registration from %s with session %s',
+        LOG.debug('Received registration from %s with session %s',
                   code, session_num)
         try:
             node = objects.Node.get_by_code(ctx, code)
@@ -137,16 +140,14 @@ class ConductorEndpoint(object):
     def execute_on_node(self, ctx, node_uuid, wamp_rpc_call, wamp_rpc_args):
         LOG.debug('Executing \"%s\" on the node: %s', wamp_rpc_call, node_uuid)
 
-        try:
-            node = objects.Node.get_by_uuid(ctx, node_uuid)
-        except Exception:
-            return exception.NodeNotFound(node=node_uuid)
+        node = objects.Node.get_by_uuid(ctx, node_uuid)
 
+        # check the session; it rise an excpetion if session miss
+        session = objects.SessionWP.get_session_by_node_uuid(node_uuid)
         s4t_topic = 's4t_invoke_wamp'
         full_topic = node.agent + '.' + s4t_topic
 
         self.target.topic = full_topic
-        self.wamp_agent_client.prepare(timeout=10)
 
         full_wamp_call = 'iotronic.' + node.uuid + "." + wamp_rpc_call
 

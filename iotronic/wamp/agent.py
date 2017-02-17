@@ -17,6 +17,7 @@ from autobahn.twisted import wamp
 from autobahn.twisted import websocket
 from autobahn.wamp import types
 from iotronic.common import exception
+from iotronic.common.i18n import _LI
 from iotronic.common.i18n import _LW
 from iotronic.db import api as dbapi
 from oslo_config import cfg
@@ -26,6 +27,12 @@ import threading
 from threading import Thread
 from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet import reactor
+
+import os
+import signal
+
+
+
 
 LOG = logging.getLogger(__name__)
 
@@ -160,15 +167,13 @@ class RPCServer(Thread):
                                                     executor='threading')
 
     def run(self):
+        LOG.info("Starting AMQP server... ")
+        self.server.start()
 
-        try:
-            LOG.info("Starting AMQP server... ")
-            self.server.start()
-        except KeyboardInterrupt:
-
-            LOG.info("Stopping AMQP server... ")
-            self.server.stop()
-            LOG.info("AMQP server stopped. ")
+    def stop(self):
+        LOG.info("Stopping AMQP server... ")
+        self.server.stop()
+        LOG.info("AMQP server stopped. ")
 
 
 class WampManager(object):
@@ -198,6 +203,8 @@ class WampManager(object):
 class WampAgent(object):
     def __init__(self, host):
 
+        signal.signal(signal.SIGINT, self.stop_handler)
+
         logging.register_options(CONF)
         CONF(project='iotronic')
         logging.setup(CONF, "iotronic-wamp-agent")
@@ -225,13 +232,29 @@ class WampAgent(object):
         global AGENT_HOST
         AGENT_HOST = self.host
 
-        r = RPCServer()
-        w = WampManager()
+        self.r = RPCServer()
+        self.w = WampManager()
 
-        try:
-            r.start()
-            w.start()
-        except KeyboardInterrupt:
-            w.stop()
-            r.stop()
-            exit()
+        self.r.start()
+        self.w.start()
+
+    def del_host(self, deregister=True):
+        if deregister:
+            try:
+                self.dbapi.unregister_wampagent(self.host)
+                LOG.info(_LI('Successfully stopped wampagent with hostname '
+                             '%(hostname)s.'),
+                         {'hostname': self.host})
+            except exception.WampAgentNotFound:
+                pass
+        else:
+            LOG.info(_LI('Not deregistering wampagent with hostname '
+                         '%(hostname)s.'),
+                     {'hostname': self.host})
+
+
+    def stop_handler(self,signum, frame):
+        self.w.stop()
+        self.r.stop()
+        self.del_host()
+        os._exit(0)

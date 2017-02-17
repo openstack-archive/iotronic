@@ -104,6 +104,7 @@ def _paginate_query(model, limit=None, marker=None, sort_key=None,
         raise exception.InvalidParameterValue(
             _('The sort_key value "%(key)s" is an invalid field for sorting')
             % {'key': sort_key})
+
     return query.all()
 
 
@@ -140,9 +141,9 @@ class Connection(api.Connection):
 
         if 'online' in filters:
             if filters['online']:
-                query = query.filter(models.WampAgent.online is False)
+                query = query.filter(models.WampAgent.online == True)
             else:
-                query = query.filter(models.WampAgent.online is True)
+                query = query.filter(models.WampAgent.online == False)
 
         return query
 
@@ -384,7 +385,7 @@ class Connection(api.Connection):
         try:
             return query.one()
         except NoResultFound:
-            return None
+            raise exception.NodeNotConnected(node=node_uuid)
 
     def get_session_by_session_id(self, session_id):
         query = model_query(models.SessionWP).filter_by(session_id=session_id)

@@ -287,3 +287,17 @@ class Connection(object):
         :param sort_dir: direction in which results should be sorted.
                          (asc, desc)
         """
+
+    @abc.abstractmethod
+    def get_session_by_node_uuid(self, filters=None, limit=None, marker=None,
+                           sort_key=None, sort_dir=None):
+        """Return a Wamp session of a Node
+
+        :param filters: Filters to apply. Defaults to None.
+        :param limit: Maximum number of wampagents to return.
+        :param marker: the last item of the previous page; we return the next
+                       result set.
+        :param sort_key: Attribute by which results should be sorted.
+        :param sort_dir: direction in which results should be sorted.
+                         (asc, desc)
+        """
