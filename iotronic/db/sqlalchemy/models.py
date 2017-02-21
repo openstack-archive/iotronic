@@ -190,3 +190,31 @@ class SessionWP(Base):
     session_id = Column(String(15))
     node_uuid = Column(String(36))
     node_id = Column(Integer, ForeignKey('nodes.id'))
+
+
+class Plugin(Base):
+    """Represents a plugin."""
+
+    __tablename__ = 'plugins'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_plugins0uuid'),
+        table_args())
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36))
+    name = Column(String(36))
+    config = Column(TEXT)
+    extra = Column(JSONEncodedDict)
+
+
+class Injected_Plugin(Base):
+    """Represents an plugin injection on board."""
+
+    __tablename__ = 'injected_plugins'
+    __table_args__ = (
+        table_args())
+    id = Column(Integer, primary_key=True)
+    node_uuid = Column(String(36))
+    node_id = Column(Integer, ForeignKey('nodes.id'))
+    plugin_uuid = Column(String(36))
+    plugin_id = Column(Integer, ForeignKey('plugins.id'))
+    status = Column(String(15))

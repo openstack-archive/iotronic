@@ -92,8 +92,32 @@ def get_rpc_node(node_ident):
 
     raise exception.InvalidUuidOrName(name=node_ident)
 
-    # Ensure we raise the same exception as we did for the Juno release
     raise exception.NodeNotFound(node=node_ident)
+
+
+def get_rpc_plugin(plugin_ident):
+    """Get the RPC plugin from the plugin uuid or logical name.
+
+    :param plugin_ident: the UUID or logical name of a plugin.
+
+    :returns: The RPC Plugin.
+    :raises: InvalidUuidOrName if the name or uuid provided is not valid.
+    :raises: PluginNotFound if the plugin is not found.
+    """
+    # Check to see if the plugin_ident is a valid UUID.  If it is, treat it
+    # as a UUID.
+    if uuidutils.is_uuid_like(plugin_ident):
+        return objects.Plugin.get_by_uuid(pecan.request.context, plugin_ident)
+
+    # We can refer to plugins by their name, if the client supports it
+    # if allow_plugin_logical_names():
+    #    if utils.is_hostname_safe(plugin_ident):
+    else:
+        return objects.Plugin.get_by_name(pecan.request.context, plugin_ident)
+
+    raise exception.InvalidUuidOrName(name=plugin_ident)
+
+    raise exception.PluginNotFound(plugin=plugin_ident)
 
 
 def is_valid_node_name(name):
@@ -105,3 +129,14 @@ def is_valid_node_name(name):
     :returns: True if the name is valid, False otherwise.
     """
     return utils.is_hostname_safe(name) and (not uuidutils.is_uuid_like(name))
+
+
+def is_valid_name(name):
+    """Determine if the provided name is a valid name.
+
+    Check to see that the provided node name isn't a UUID.
+
+    :param: name: the node name to check.
+    :returns: True if the name is valid, False otherwise.
+    """
+    return not uuidutils.is_uuid_like(name)

@@ -205,6 +205,20 @@ class Connection(object):
         """
 
     @abc.abstractmethod
+    def get_session_by_node_uuid(self, filters=None, limit=None, marker=None,
+                                 sort_key=None, sort_dir=None):
+        """Return a Wamp session of a Node
+
+        :param filters: Filters to apply. Defaults to None.
+        :param limit: Maximum number of wampagents to return.
+        :param marker: the last item of the previous page; we return the next
+                       result set.
+        :param sort_key: Attribute by which results should be sorted.
+        :param sort_dir: direction in which results should be sorted.
+                         (asc, desc)
+        """
+
+    @abc.abstractmethod
     def create_location(self, values):
         """Create a new location.
 
@@ -290,15 +304,52 @@ class Connection(object):
         """
 
     @abc.abstractmethod
-    def get_session_by_node_uuid(self, filters=None, limit=None, marker=None,
-                                 sort_key=None, sort_dir=None):
-        """Return a Wamp session of a Node
+    def get_plugin_by_id(self, plugin_id):
+        """Return a plugin.
 
-        :param filters: Filters to apply. Defaults to None.
-        :param limit: Maximum number of wampagents to return.
-        :param marker: the last item of the previous page; we return the next
-                       result set.
-        :param sort_key: Attribute by which results should be sorted.
-        :param sort_dir: direction in which results should be sorted.
-                         (asc, desc)
+        :param plugin_id: The id of a plugin.
+        :returns: A plugin.
+        """
+
+    @abc.abstractmethod
+    def get_plugin_by_uuid(self, plugin_uuid):
+        """Return a plugin.
+
+        :param plugin_uuid: The uuid of a plugin.
+        :returns: A plugin.
+        """
+
+    @abc.abstractmethod
+    def get_plugin_by_name(self, plugin_name):
+        """Return a plugin.
+
+        :param plugin_name: The logical name of a plugin.
+        :returns: A plugin.
+        """
+
+    @abc.abstractmethod
+    def create_plugin(self, values):
+        """Create a new plugin.
+
+        :param values: A dict containing several items used to identify
+                       and track the plugin
+        :returns: A plugin.
+        """
+
+    @abc.abstractmethod
+    def destroy_plugin(self, plugin_id):
+        """Destroy a plugin and all associated interfaces.
+
+        :param plugin_id: The id or uuid of a plugin.
+        """
+
+    @abc.abstractmethod
+    def update_plugin(self, plugin_id, values):
+        """Update properties of a plugin.
+
+        :param plugin_id: The id or uuid of a plugin.
+        :param values: Dict of values to update.
+        :returns: A plugin.
+        :raises: PluginAssociated
+        :raises: PluginNotFound
         """

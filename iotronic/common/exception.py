@@ -578,3 +578,7 @@ class PathNotFound(IotronicException):
 
 class DirectoryNotWritable(IotronicException):
     message = _("Directory %(dir)s is not writable.")
+
+
+class PluginNotFound(NotFound):
+    message = _("Plugin %(plugin)s could not be found.")

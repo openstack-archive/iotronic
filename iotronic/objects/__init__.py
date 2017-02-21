@@ -15,12 +15,14 @@
 from iotronic.objects import conductor
 from iotronic.objects import location
 from iotronic.objects import node
+from iotronic.objects import plugin
 from iotronic.objects import sessionwp
 from iotronic.objects import wampagent
 
 Conductor = conductor.Conductor
 Node = node.Node
 Location = location.Location
+Plugin = plugin.Plugin
 SessionWP = sessionwp.SessionWP
 WampAgent = wampagent.WampAgent
 
@@ -30,4 +32,5 @@ __all__ = (
     Location,
     SessionWP,
     WampAgent,
+    Plugin,
 )

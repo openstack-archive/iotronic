@@ -120,7 +120,11 @@ class ConductorEndpoint(object):
         prov.conf_clean()
         p = prov.get_config()
         LOG.debug('sending this conf %s', p)
-        self.execute_on_node(ctx, node_id, 'destroyNode', (p,))
+        try:
+            self.execute_on_node(ctx, node_id, 'destroyNode', (p,))
+        except Exception:
+            LOG.error('cannot execute remote destroynode on %s. '
+                      'Maybe it is OFFLINE', node_id)
 
         node.destroy()
 
@@ -161,3 +165,23 @@ class ConductorEndpoint(object):
         return self.wamp_agent_client.call(ctx, full_topic,
                                            wamp_rpc_call=full_wamp_call,
                                            data=wamp_rpc_args)
+
+    def destroy_plugin(self, ctx, plugin_id):
+        LOG.info('Destroying plugin with id %s',
+                 plugin_id)
+        plugin = objects.Plugin.get_by_uuid(ctx, plugin_id)
+        plugin.destroy()
+        return
+
+    def update_plugin(self, ctx, plugin_obj):
+        plugin = serializer.deserialize_entity(ctx, plugin_obj)
+        LOG.debug('Updating plugin %s', plugin.name)
+        plugin.save()
+        return serializer.serialize_entity(ctx, plugin)
+
+    def create_plugin(self, ctx, plugin_obj):
+        new_plugin = serializer.deserialize_entity(ctx, plugin_obj)
+        LOG.debug('Creating plugin %s',
+                  new_plugin.name)
+        new_plugin.create()
+        return serializer.serialize_entity(ctx, new_plugin)

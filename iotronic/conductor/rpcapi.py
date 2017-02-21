@@ -93,10 +93,6 @@ class ConductorAPI(object):
         """Synchronously, have a conductor update the node's information.
 
         Update the node's information in the database and return a node object.
-        The conductor will lock the node while it validates the supplied
-        information. If driver_info is passed, it will be validated by
-        the core drivers. If instance_uuid is passed, it will be set or unset
-        only if the node is properly configured.
 
         Note that power_state should not be passed via this method.
         Use change_node_power_state for initiating driver actions.
@@ -130,3 +126,45 @@ class ConductorAPI(object):
         return cctxt.call(context, 'execute_on_node', node_uuid=node_uuid,
                           wamp_rpc_call=wamp_rpc_call,
                           wamp_rpc_args=wamp_rpc_args)
+
+    def create_plugin(self, context, plugin_obj, topic=None):
+        """Add a plugin on the cloud
+
+        :param context: request context.
+        :param plugin_obj: a changed (but not saved) plugin object.
+        :param topic: RPC topic. Defaults to self.topic.
+        :returns: created plugin object
+
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'create_plugin',
+                          plugin_obj=plugin_obj)
+
+    def update_plugin(self, context, plugin_obj, topic=None):
+        """Synchronously, have a conductor update the plugin's information.
+
+        Update the plugin's information in the database and
+        return a plugin object.
+
+        :param context: request context.
+        :param plugin_obj: a changed (but not saved) plugin object.
+        :param topic: RPC topic. Defaults to self.topic.
+        :returns: updated plugin object, including all fields.
+
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'update_plugin', plugin_obj=plugin_obj)
+
+    def destroy_plugin(self, context, plugin_id, topic=None):
+        """Delete a plugin.
+
+        :param context: request context.
+        :param plugin_id: plugin id or uuid.
+        :raises: PluginLocked if plugin is locked by another conductor.
+        :raises: PluginAssociated if the plugin contains an instance
+            associated with it.
+        :raises: InvalidState if the plugin is in the wrong provision
+            state to perform deletion.
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'destroy_plugin', plugin_id=plugin_id)

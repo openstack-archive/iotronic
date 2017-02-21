@@ -19,6 +19,7 @@ Version 1 of the Iotronic API
 from iotronic.api.controllers import base
 from iotronic.api.controllers import link
 from iotronic.api.controllers.v1 import node
+from iotronic.api.controllers.v1 import plugin
 from iotronic.api import expose
 from iotronic.common.i18n import _
 import pecan
@@ -52,6 +53,8 @@ class V1(base.APIBase):
     nodes = [link.Link]
     """Links to the nodes resource"""
 
+    plugins = [link.Link]
+
     @staticmethod
     def convert():
         v1 = V1()
@@ -64,6 +67,14 @@ class V1(base.APIBase):
                                         'nodes', '',
                                         bookmark=True)
                     ]
+
+        v1.plugins = [link.Link.make_link('self', pecan.request.host_url,
+                                          'plugins', ''),
+                      link.Link.make_link('bookmark',
+                                          pecan.request.host_url,
+                                          'plugins', '',
+                                          bookmark=True)
+                      ]
 
         '''
         v1.links = [link.Link.make_link('self', pecan.request.host_url,
@@ -82,6 +93,7 @@ class Controller(rest.RestController):
     """Version 1 API controller root."""
 
     nodes = node.NodesController()
+    plugins = plugin.PluginsController()
 
     @expose.expose(V1)
     def get(self):

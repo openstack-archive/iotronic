@@ -1,0 +1,60 @@
+#!/bin/bash
+
+HOST='localhost'
+PORT='1288'
+VERSION='v1'
+BASE=http://$HOST:$PORT/$VERSION
+
+function node_manager() {
+    case "$1" in
+        list)  curl -sS $BASE/nodes/ |  python -m json.tool
+        echo "";
+        ;;
+        create) curl -sS -H "Content-Type: application/json" -X POST $BASE/nodes/  \
+        -d '{"type":"'"$7"'","code":"'"$2"'","name":"'"$3"'","location":[{"latitude":"'"$4"'","longitude":"'"$5"'","altitude":"'"$6"'"}]}'  | python -m json.tool
+        echo "";
+        ;;
+        delete) curl -sS -X DELETE $BASE/nodes/$2 |  python -m json.tool
+        echo "";
+        ;;
+        show) curl -sS $BASE/nodes/$2 |  python -m json.tool
+        echo "";
+        ;;
+        *) echo "node list|create|delete|show"
+    esac
+}
+
+function plugin_manager() {
+    case "$1" in
+        list)  curl -sS $BASE/plugins/ |  python -m json.tool
+        echo "";
+        ;;
+        create) echo "TBI"
+        echo "";
+        ;;
+        delete) echo "TBI"
+        echo "";
+        ;;
+        show) curl -sS $BASE/plugins/$2 |  python -m json.tool
+        echo "";
+        ;;
+        *) echo "plugin list|create|delete|show"
+    esac
+}
+
+if [ $# -lt 1 ]
+then
+echo "USAGE: iotronic node|plugin [OPTIONS]"
+exit
+fi
+
+case "$1" in
+node) node_manager "${@:2}";
+echo "";
+;;
+plugin) plugin_manager "${@:2}"
+echo "";
+;;
+*) echo "USAGE: iotronic node|plugin [OPTIONS]"
+esac
+

@@ -132,6 +132,57 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 10
 DEFAULT CHARACTER SET = utf8;
 
+-- -----------------------------------------------------
+-- Table `iotronic`.`plugins`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `iotronic`.`plugins` ;
+
+CREATE TABLE IF NOT EXISTS `iotronic`.`plugins` (
+  `created_at` DATETIME NULL DEFAULT NULL,
+  `updated_at` DATETIME NULL DEFAULT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `uuid` VARCHAR(36) NOT NULL,
+  `name` VARCHAR(255) NULL DEFAULT NULL,
+  `config` TEXT NULL DEFAULT NULL,
+  `extra` TEXT NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uuid` (`uuid` ASC))
+ENGINE = InnoDB
+AUTO_INCREMENT = 132
+DEFAULT CHARACTER SET = utf8;
+
+-- -----------------------------------------------------
+-- Table `iotronic`.`injected_plugins`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `iotronic`.`injected_plugins` ;
+
+CREATE TABLE IF NOT EXISTS `iotronic`.`injected_plugins` (
+  `created_at` DATETIME NULL DEFAULT NULL,
+  `updated_at` DATETIME NULL DEFAULT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `node_uuid` VARCHAR(36) NOT NULL,
+  `node_id` INT(11) NOT NULL,
+  `plugin_uuid` VARCHAR(36) NOT NULL,
+  `plugin_id` INT(11) NOT NULL,
+  `status` VARCHAR(15) NOT NULL DEFAULT 'injected',
+  PRIMARY KEY (`id`),
+  INDEX `node_id` (`node_id` ASC),
+  CONSTRAINT `node_id`
+    FOREIGN KEY (`node_id`)
+    REFERENCES `iotronic`.`nodes` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  INDEX `plugin_id` (`plugin_id` ASC),
+  CONSTRAINT `plugin_id`
+    FOREIGN KEY (`plugin_id`)
+    REFERENCES `iotronic`.`plugins` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB
+AUTO_INCREMENT = 132
+DEFAULT CHARACTER SET = utf8;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

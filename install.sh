@@ -3,6 +3,7 @@
 function build_install {
     python setup.py build
     python setup.py install
+    cp utils/iotronic_curl_client /usr/bin/iotronic
 }
 
 function restart_apache {
