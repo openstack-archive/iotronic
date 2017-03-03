@@ -1,0 +1,10 @@
+Code-Review+2: Nicola Peditto <npeditto@unime.it>
+Workflow+1: Nicola Peditto <npeditto@unime.it>
+Code-Review+2: Fabio Verboso <fverboso@unime.it>
+Workflow+1: Fabio Verboso <fverboso@unime.it>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 03 Mar 2017 17:36:52 +0000
+Reviewed-on: https://review.openstack.org/441243
+Project: openstack/iotronic
+Branch: refs/heads/master
