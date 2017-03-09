@@ -1,0 +1,9 @@
+Code-Review+2: Fabio Verboso <fverboso@unime.it>
+Code-Review+2: Carmelo Romeo <carmelo.romeo85@gmail.com>
+Workflow+1: Carmelo Romeo <carmelo.romeo85@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 09 Mar 2017 15:18:35 +0000
+Reviewed-on: https://review.openstack.org/443683
+Project: openstack/iotronic
+Branch: refs/heads/master
