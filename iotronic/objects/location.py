@@ -52,19 +52,19 @@ class Location(base.IotronicObject):
                 cls(context),
                 obj) for obj in db_objects]
 
-    @base.remotable_classmethod
-    def get(cls, context, location_id):
-        """Find a location based on its id or uuid and return a Location object.
-
-        :param location_id: the id *or* uuid of a location.
-        :returns: a :class:`Location` object.
-        """
-        if strutils.is_int_like(location_id):
-            return cls.get_by_id(context, location_id)
-        elif uuidutils.is_uuid_like(location_id):
-            return cls.get_by_uuid(context, location_id)
-        else:
-            raise exception.InvalidIdentity(identity=location_id)
+    # @base.remotable_classmethod
+    # def get(cls, context, location_id):
+    #     """Find a location based on its id or uuid and return a Location object.
+    #
+    #     :param location_id: the id *or* uuid of a location.
+    #     :returns: a :class:`Location` object.
+    #     """
+    #     if strutils.is_int_like(location_id):
+    #         return cls.get_by_id(context, location_id)
+    #     elif uuidutils.is_uuid_like(location_id):
+    #         return cls.get_by_uuid(context, location_id)
+    #     else:
+    #         raise exception.InvalidIdentity(identity=location_id)
 
     @base.remotable_classmethod
     def get_by_id(cls, context, location_id):
@@ -77,36 +77,36 @@ class Location(base.IotronicObject):
         location = Location._from_db_object(cls(context), db_location)
         return location
 
-    @base.remotable_classmethod
-    def get_by_uuid(cls, context, uuid):
-        """Find a location based on uuid and return a :class:`Location` object.
+    # @base.remotable_classmethod
+    # def get_by_uuid(cls, context, uuid):
+    #     """Find a location based on uuid and return a :class:`Location` object.
+    #
+    #     :param uuid: the uuid of a location.
+    #     :param context: Security context
+    #     :returns: a :class:`Location` object.
+    #     """
+    #     db_location = cls.dbapi.get_location_by_uuid(uuid)
+    #     location = Location._from_db_object(cls(context), db_location)
+    #     return location
 
-        :param uuid: the uuid of a location.
-        :param context: Security context
-        :returns: a :class:`Location` object.
-        """
-        db_location = cls.dbapi.get_location_by_uuid(uuid)
-        location = Location._from_db_object(cls(context), db_location)
-        return location
-
-    @base.remotable_classmethod
-    def list(cls, context, limit=None, marker=None,
-             sort_key=None, sort_dir=None):
-        """Return a list of Location objects.
-
-        :param context: Security context.
-        :param limit: maximum number of resources to return in a single result.
-        :param marker: pagination marker for large data sets.
-        :param sort_key: column to sort results by.
-        :param sort_dir: direction to sort. "asc" or "desc".
-        :returns: a list of :class:`Location` object.
-
-        """
-        db_locations = cls.dbapi.get_location_list(limit=limit,
-                                                   marker=marker,
-                                                   sort_key=sort_key,
-                                                   sort_dir=sort_dir)
-        return Location._from_db_object_list(db_locations, cls, context)
+    # @base.remotable_classmethod
+    # def list(cls, context, limit=None, marker=None,
+    #          sort_key=None, sort_dir=None):
+    #     """Return a list of Location objects.
+    #
+    #     :param context: Security context.
+    #     :param limit: maximum number of resources to return in a single result.
+    #     :param marker: pagination marker for large data sets.
+    #     :param sort_key: column to sort results by.
+    #     :param sort_dir: direction to sort. "asc" or "desc".
+    #     :returns: a list of :class:`Location` object.
+    #
+    #     """
+    #     db_locations = cls.dbapi.get_location_list(limit=limit,
+    #                                                marker=marker,
+    #                                                sort_key=sort_key,
+    #                                                sort_dir=sort_dir)
+    #     return Location._from_db_object_list(db_locations, cls, context)
 
     @base.remotable_classmethod
     def list_by_board_uuid(cls, context, board_uuid, limit=None, marker=None,
@@ -200,24 +200,24 @@ class Location(base.IotronicObject):
 
         self.obj_reset_changes()
 
-    @base.remotable
-    def refresh(self, context=None):
-        """Loads updates for this Location.
-
-        Loads a location with the same uuid from the database and
-        checks for updated attributes. Updates are applied from
-        the loaded location column by column, if there are any updates.
-
-        :param context: Security context. NOTE: This should only
-                        be used internally by the indirection_api.
-                        Unfortunately, RPC requires context as the first
-                        argument, even though we don't use it.
-                        A context should be set when instantiating the
-                        object, e.g.: Location(context)
-        """
-        current = self.__class__.get_by_uuid(self._context, uuid=self.uuid)
-        for field in self.fields:
-            if (hasattr(
-                    self, base.get_attrname(field))
-                    and self[field] != current[field]):
-                self[field] = current[field]
+    # @base.remotable
+    # def refresh(self, context=None):
+    #     """Loads updates for this Location.
+    #
+    #     Loads a location with the same uuid from the database and
+    #     checks for updated attributes. Updates are applied from
+    #     the loaded location column by column, if there are any updates.
+    #
+    #     :param context: Security context. NOTE: This should only
+    #                     be used internally by the indirection_api.
+    #                     Unfortunately, RPC requires context as the first
+    #                     argument, even though we don't use it.
+    #                     A context should be set when instantiating the
+    #                     object, e.g.: Location(context)
+    #     """
+    #     current = self.__class__.get_by_uuid(self._context, uuid=self.uuid)
+    #     for field in self.fields:
+    #         if (hasattr(
+    #                 self, base.get_attrname(field))
+    #                 and self[field] != current[field]):
+    #             self[field] = current[field]
