@@ -22,5 +22,5 @@ Iotronic Wamp Agent
 from iotronic.wamp.agent import WampAgent
 import socket
 
-if __name__ == '__main__':
+def main():
     wa = WampAgent(socket.gethostname())

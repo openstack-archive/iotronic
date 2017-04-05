@@ -22,5 +22,5 @@ from iotronic.conductor.manager import ConductorManager
 import socket
 
 CONF = cfg.CONF
-if __name__ == '__main__':
+def main():
     cond = ConductorManager(socket.gethostname())
