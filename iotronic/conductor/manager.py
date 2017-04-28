@@ -21,6 +21,7 @@ import os
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_messaging.rpc import dispatcher
 import signal
 import time
 
@@ -85,10 +86,11 @@ class ConductorManager(object):
         endpoints = [
             endp.ConductorEndpoint(ragent),
         ]
-        self.server = oslo_messaging.get_rpc_server(transport,
-                                                    target,
-                                                    endpoints,
-                                                    executor='threading')
+        access_policy = dispatcher.DefaultRPCAccessPolicy
+        self.server = oslo_messaging.get_rpc_server(
+            transport, target,
+            endpoints, executor='threading',
+            access_policy=access_policy)
 
         self.server.start()
 
