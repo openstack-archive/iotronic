@@ -25,6 +25,7 @@ from iotronic.db import api as dbapi
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_messaging.rpc import dispatcher
 import threading
 from threading import Thread
 from twisted.internet.protocol import ReconnectingClientFactory
@@ -172,10 +173,11 @@ class RPCServer(Thread):
         target = oslo_messaging.Target(topic=AGENT_HOST + '.s4t_invoke_wamp',
                                        server='server1')
 
-        self.server = oslo_messaging.get_rpc_server(transport,
-                                                    target,
-                                                    endpoints,
-                                                    executor='threading')
+        access_policy = dispatcher.DefaultRPCAccessPolicy
+        self.server = oslo_messaging.get_rpc_server(
+            transport, target,
+            endpoints, executor='threading',
+            access_policy=access_policy)
 
     def run(self):
         LOG.info("Starting AMQP server... ")
