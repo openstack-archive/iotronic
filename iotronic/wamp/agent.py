@@ -19,8 +19,6 @@ from autobahn.wamp import types
 from twisted.internet.defer import inlineCallbacks
 
 from iotronic.common import exception
-from iotronic.common.i18n import _LI
-from iotronic.common.i18n import _LW
 from iotronic.db import api as dbapi
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -232,8 +230,8 @@ class WampAgent(object):
                 {'hostname': self.host, 'wsurl': CONF.wamp.wamp_transport_url})
 
         except exception.WampAgentAlreadyRegistered:
-            LOG.warn(_LW("A wampagent with hostname %(hostname)s "
-                         "was previously registered. Updating registration"),
+            LOG.warn("A wampagent with hostname %(hostname)s "
+                     "was previously registered. Updating registration",
                      {'hostname': self.host})
 
         wpa = self.dbapi.register_wampagent(
@@ -256,15 +254,13 @@ class WampAgent(object):
         if deregister:
             try:
                 self.dbapi.unregister_wampagent(self.host)
-                LOG.info(_LI('Successfully stopped wampagent with hostname '
-                             '%(hostname)s.'),
-                         {'hostname': self.host})
+                LOG.info('Successfully stopped wampagent with hostname '
+                         '%(hostname)s.', {'hostname': self.host})
             except exception.WampAgentNotFound:
                 pass
         else:
-            LOG.info(_LI('Not deregistering wampagent with hostname '
-                         '%(hostname)s.'),
-                     {'hostname': self.host})
+            LOG.info('Not deregistering wampagent with hostname '
+                     '%(hostname)s.', {'hostname': self.host})
 
     def stop_handler(self, signum, frame):
         self.w.stop()

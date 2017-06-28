@@ -27,7 +27,7 @@ from oslo_log import log as logging
 import six
 
 from iotronic.common.i18n import _
-from iotronic.common.i18n import _LE
+
 
 LOG = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class IotronicException(Exception):
             except Exception as e:
                 # kwargs doesn't match a variable in the message
                 # log the issue and the kwargs
-                LOG.exception(_LE('Exception in string format operation'))
+                LOG.exception('Exception in string format operation')
                 for name, value in kwargs.items():
                     LOG.error("%s: %s" % (name, value))
 

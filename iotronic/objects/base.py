@@ -24,7 +24,6 @@ import six
 
 from iotronic.common import exception
 from iotronic.common.i18n import _
-from iotronic.common.i18n import _LE
 from iotronic.objects import utils as obj_utils
 from iotronic.openstack.common import versionutils
 
@@ -68,8 +67,7 @@ def make_class_properties(cls):
                 return setattr(self, get_attrname(name), typefn(value))
             except Exception:
                 attr = "%s.%s" % (self.obj_name(), name)
-                LOG.exception(_LE('Error setting %(attr)s'),
-                              {'attr': attr})
+                LOG.exception('Error setting %(attr)s', {'attr': attr})
                 raise
 
         setattr(cls, name, property(getter, setter))
@@ -221,8 +219,8 @@ class IotronicObject(object):
     def obj_class_from_name(cls, objname, objver):
         """Returns a class from the registry based on a name and version."""
         if objname not in cls._obj_classes:
-            LOG.error(_LE('Unable to instantiate unregistered object type '
-                          '%(objtype)s'), dict(objtype=objname))
+            LOG.error('Unable to instantiate unregistered object type '
+                      '%(objtype)s', dict(objtype=objname))
             raise exception.UnsupportedObjectError(objtype=objname)
 
         latest = None

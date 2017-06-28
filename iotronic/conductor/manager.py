@@ -13,8 +13,6 @@
 #    under the License.
 
 from iotronic.common import exception
-from iotronic.common.i18n import _LI
-from iotronic.common.i18n import _LW
 from iotronic.conductor import endpoints as endp
 from iotronic.db import api as dbapi
 import os
@@ -65,8 +63,8 @@ class ConductorManager(object):
             cdr = self.dbapi.register_conductor(
                 {'hostname': self.host})
         except exception.ConductorAlreadyRegistered:
-            LOG.warn(_LW("A conductor with hostname %(hostname)s "
-                         "was previously registered. Updating registration"),
+            LOG.warn("A conductor with hostname %(hostname)s "
+                     "was previously registered. Updating registration",
                      {'hostname': self.host})
 
             cdr = self.dbapi.register_conductor({'hostname': self.host},
@@ -106,12 +104,10 @@ class ConductorManager(object):
         if deregister:
             try:
                 self.dbapi.unregister_conductor(self.host)
-                LOG.info(_LI('Successfully stopped conductor with hostname '
-                             '%(hostname)s.'),
-                         {'hostname': self.host})
+                LOG.info('Successfully stopped conductor with hostname '
+                         '%(hostname)s.', {'hostname': self.host})
             except exception.ConductorNotFound:
                 pass
         else:
-            LOG.info(_LI('Not deregistering conductor with hostname '
-                         '%(hostname)s.'),
-                     {'hostname': self.host})
+            LOG.info('Not deregistering conductor with hostname '
+                     '%(hostname)s.', {'hostname': self.host})

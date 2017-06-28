@@ -19,7 +19,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import six
 
-from iotronic.openstack.common._i18n import _, _LE, _LI
+from iotronic.openstack.common._i18n import _
 
 
 periodic_opts = [
@@ -118,14 +118,12 @@ class _PeriodicTasksMeta(type):
         name = task._periodic_name
 
         if task._periodic_spacing < 0:
-            LOG.info(_LI('Skipping periodic task %(task)s because '
-                         'its interval is negative'),
-                     {'task': name})
+            LOG.info('Skipping periodic task %(task)s because '
+                     'its interval is negative', {'task': name})
             return False
         if not task._periodic_enabled:
-            LOG.info(_LI('Skipping periodic task %(task)s because '
-                         'it is disabled'),
-                     {'task': name})
+            LOG.info('Skipping periodic task %(task)s because '
+                     'it is disabled', {'task': name})
             return False
 
         # A periodic spacing of zero indicates that this task should
@@ -227,7 +225,7 @@ class PeriodicTasks(object):
             except Exception as e:
                 if raise_on_error:
                     raise
-                LOG.exception(_LE("Error during %(full_task_name)s: %(e)s"),
+                LOG.exception("Error during %(full_task_name)s: %(e)s",
                               {"full_task_name": full_task_name, "e": e})
             time.sleep(0)
 

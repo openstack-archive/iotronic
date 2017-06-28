@@ -38,7 +38,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from iotronic.openstack.common import eventlet_backdoor
-from iotronic.openstack.common._i18n import _LE, _LI, _LW
 from iotronic.openstack.common import systemd
 from iotronic.openstack.common import threadgroup
 
@@ -172,7 +171,7 @@ class ServiceLauncher(Launcher):
             super(ServiceLauncher, self).wait()
         except SignalExit as exc:
             signame = _signo_to_signame(exc.signo)
-            LOG.info(_LI('Caught %s, exiting'), signame)
+            LOG.info('Caught %s, exiting', signame)
             status = exc.code
             signo = exc.signo
         except SystemExit as exc:
@@ -239,7 +238,7 @@ class ProcessLauncher(object):
         # dies unexpectedly
         self.readpipe.read()
 
-        LOG.info(_LI('Parent process has died unexpectedly, exiting'))
+        LOG.info('Parent process has died unexpectedly, exiting')
 
         sys.exit(1)
 
@@ -270,13 +269,13 @@ class ProcessLauncher(object):
             launcher.wait()
         except SignalExit as exc:
             signame = _signo_to_signame(exc.signo)
-            LOG.info(_LI('Child caught %s, exiting'), signame)
+            LOG.info('Child caught %s, exiting', signame)
             status = exc.code
             signo = exc.signo
         except SystemExit as exc:
             status = exc.code
         except BaseException:
-            LOG.exception(_LE('Unhandled exception'))
+            LOG.exception('Unhandled exception')
             status = 2
         finally:
             launcher.stop()
@@ -309,7 +308,7 @@ class ProcessLauncher(object):
             # start up quickly but ensure we don't fork off children that
             # die instantly too quickly.
             if time.time() - wrap.forktimes[0] < wrap.workers:
-                LOG.info(_LI('Forking too fast, sleeping'))
+                LOG.info('Forking too fast, sleeping')
                 time.sleep(1)
 
             wrap.forktimes.pop(0)
@@ -328,7 +327,7 @@ class ProcessLauncher(object):
 
             os._exit(status)
 
-        LOG.info(_LI('Started child %d'), pid)
+        LOG.info('Started child %d', pid)
 
         wrap.children.add(pid)
         self.children[pid] = wrap
@@ -338,7 +337,7 @@ class ProcessLauncher(object):
     def launch_service(self, service, workers=1):
         wrap = ServiceWrapper(service, workers)
 
-        LOG.info(_LI('Starting %d workers'), wrap.workers)
+        LOG.info('Starting %d workers', wrap.workers)
         while self.running and len(wrap.children) < wrap.workers:
             self._start_child(wrap)
 
@@ -355,15 +354,15 @@ class ProcessLauncher(object):
 
         if os.WIFSIGNALED(status):
             sig = os.WTERMSIG(status)
-            LOG.info(_LI('Child %(pid)d killed by signal %(sig)d'),
+            LOG.info('Child %(pid)d killed by signal %(sig)d',
                      dict(pid=pid, sig=sig))
         else:
             code = os.WEXITSTATUS(status)
-            LOG.info(_LI('Child %(pid)s exited with status %(code)d'),
+            LOG.info('Child %(pid)s exited with status %(code)d',
                      dict(pid=pid, code=code))
 
         if pid not in self.children:
-            LOG.warning(_LW('pid %d not in child list'), pid)
+            LOG.warning('pid %d not in child list', pid)
             return None
 
         wrap = self.children.pop(pid)
@@ -398,7 +397,7 @@ class ProcessLauncher(object):
                     return
 
                 signame = _signo_to_signame(self.sigcaught)
-                LOG.info(_LI('Caught %s, stopping children'), signame)
+                LOG.info('Caught %s, stopping children', signame)
                 if not _is_sighup_and_daemon(self.sigcaught):
                     break
 
@@ -413,7 +412,7 @@ class ProcessLauncher(object):
                 self.running = True
                 self.sigcaught = None
         except eventlet.greenlet.GreenletExit:
-            LOG.info(_LI("Wait called after thread killed. Cleaning up."))
+            LOG.info("Wait called after thread killed. Cleaning up.")
 
         self.stop()
 
@@ -429,7 +428,7 @@ class ProcessLauncher(object):
 
         # Wait for children to die
         if self.children:
-            LOG.info(_LI('Waiting on %d children to exit'), len(self.children))
+            LOG.info('Waiting on %d children to exit', len(self.children))
             while self.children:
                 self._wait_child()
 
