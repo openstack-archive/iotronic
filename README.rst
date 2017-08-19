@@ -23,27 +23,27 @@ For this installation of the Iotronic Service we are considering a scenario with
 
 Controller host setup
 ----------------------
-According to the `Openstack Documentation <https://docs.openstack.org/>`_ install the following softwares on the controller host:
+According to the `Openstack Documentation <https://docs.openstack.org/>`_,  install the following softwares on the controller host:
 
 - SQL database
 - Message queue
 - Memcached
 - Keystone
-   
+
 Creation of the database
 ----------------------
-On the dbms create the iotronic db and configure the access for the user iotronic::
+On the dbms, create the iotronic db and configure the access for the user ``iotronic``::
 
     MariaDB [(none)]> CREATE DATABASE iotronic;
     MariaDB [(none)]> GRANT ALL PRIVILEGES ON iotronic.* TO iotronic@'localhost' IDENTIFIED BY ‘IOTRONIC_DBPASS’;
     MariaDB [(none)]> GRANT ALL PRIVILEGES ON iotronic.* TO iotronic@'%' IDENTIFIED BY ‘IOTRONIC_DBPASS’;
 
-Add the user and the enpoints on Keystone::
+Add the user and the endpoints on Keystone::
 
     source adminrc
     openstack service create iot --name Iotronic
     openstack user create --password-prompt iotronic
-    
+
     openstack role add --project service --user iotronic admin
     openstack role add admin_iot_project
     openstack role add manager_iot_project
@@ -53,8 +53,7 @@ Add the user and the enpoints on Keystone::
     openstack endpoint create --region RegionOne iot internal http://IP_IOTRONIC:1288
     openstack endpoint create --region RegionOne iot admin http://1IP_IOTRONIC:1288
 
-
-Configuring Iotronic Host 
+Configuring Iotronic Host
 ----------------------
 
 Crossbar
@@ -62,7 +61,7 @@ Crossbar
 Install crossbar on the Iotronic host following the `official guide <http://crossbar.io/docs/Installation-on-Ubuntu-and-Debian/>`_
 
 
-Iotronic Installation 
+Iotronic Installation
 ^^^^^^^^^^^^^^^^^^^^^
 Get the source::
 
@@ -70,7 +69,7 @@ Get the source::
 
 install the python-mysqldb::
 
-    sudo apt-get install python-mysqldb 
+    sudo apt-get install python-mysqldb
 
 and Iotronic::
 
@@ -91,15 +90,15 @@ populate the database::
 
 API Service Configuration
 ^^^^^^^^^^^^^^^^^^^^^
-Install apache and the other components::
+Install apache and other components::
 
-sudo apt-get install apache2 python-setuptools libapache2-mod-wsgi libssl-dev
+    sudo apt-get install apache2 python-setuptools libapache2-mod-wsgi libssl-dev
 
 create ``/etc/apache2/conf-enabled/iotronic.conf`` and copy the following content::
 
     Listen 1288
     <VirtualHost *:1288>
-        WSGIDaemonProcess iotronic 
+        WSGIDaemonProcess iotronic
         #user=root group=root threads=10 display-name=%{GROUP}
         WSGIScriptAlias / /var/www/cgi-bin/iotronic/app.wsgi
 
@@ -121,12 +120,12 @@ create ``/etc/apache2/conf-enabled/iotronic.conf`` and copy the following conten
 
 edit ``/etc/iotronic/iotronic.conf`` with the correct configuration.
 
-There is just one wamp-agent and it must be set as the registration agent::
- 
-  register_agent = True
+There is just one ``wamp-agent`` and it must be set as the registration agent::
+
+    register_agent = True
 
 restart apache::
-  
+
   systemctl restart apache2
 
 Start the service (better use screen)::
@@ -137,7 +136,7 @@ Start the service (better use screen)::
   screen -S agent
   iotronic-wamp-agent
 
-Board Side 
+Board Side
 ----------------------
 
 Follow the `iotronic-lightning-rod README <https://github.com/openstack/iotronic-lightning-rod/blob/master/README.rst>`_
