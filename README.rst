@@ -23,7 +23,7 @@ For this installation of the Iotronic Service we are considering a scenario with
 
 Controller host setup
 ----------------------
-According to the `Openstack Documentation <https://docs.openstack.org/>`_ install the following softwares on the controller host:
+According to the `Openstack Documentation <https://docs.openstack.org/>`_,  install the following softwares on the controller host:
 
 - SQL database
 - Message queue
@@ -32,13 +32,13 @@ According to the `Openstack Documentation <https://docs.openstack.org/>`_ instal
    
 Creation of the database
 ----------------------
-On the dbms create the iotronic db and configure the access for the user iotronic::
+On the dbms, create the iotronic db and configure the access for the user ``iotronic``::
 
     MariaDB [(none)]> CREATE DATABASE iotronic;
     MariaDB [(none)]> GRANT ALL PRIVILEGES ON iotronic.* TO iotronic@'localhost' IDENTIFIED BY ‘IOTRONIC_DBPASS’;
     MariaDB [(none)]> GRANT ALL PRIVILEGES ON iotronic.* TO iotronic@'%' IDENTIFIED BY ‘IOTRONIC_DBPASS’;
 
-Add the user and the enpoints on Keystone::
+Add the user and the endpoints on Keystone::
 
     source adminrc
     openstack service create iot --name Iotronic
@@ -91,9 +91,9 @@ populate the database::
 
 API Service Configuration
 ^^^^^^^^^^^^^^^^^^^^^
-Install apache and the other components::
+Install apache and other components::
 
-sudo apt-get install apache2 python-setuptools libapache2-mod-wsgi libssl-dev
+    sudo apt-get install apache2 python-setuptools libapache2-mod-wsgi libssl-dev
 
 create ``/etc/apache2/conf-enabled/iotronic.conf`` and copy the following content::
 
@@ -121,7 +121,7 @@ create ``/etc/apache2/conf-enabled/iotronic.conf`` and copy the following conten
 
 edit ``/etc/iotronic/iotronic.conf`` with the correct configuration.
 
-There is just one wamp-agent and it must be set as the registration agent::
+There is just one ``wamp-agent`` and it must be set as the registration agent::
  
   register_agent = True
 
