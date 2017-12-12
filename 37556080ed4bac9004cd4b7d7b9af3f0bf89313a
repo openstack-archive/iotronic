@@ -1,0 +1,10 @@
+Code-Review+2: Fabio Verboso <fverboso@unime.it>
+Code-Review+2: Francesco Longo <flongo@unime.it>
+Workflow+1: Francesco Longo <flongo@unime.it>
+Code-Review+1: Rajat Sharma <rajat.sharma@nectechnologies.in>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 12 Dec 2017 05:55:33 +0000
+Reviewed-on: https://review.openstack.org/461055
+Project: openstack/iotronic
+Branch: refs/heads/master
