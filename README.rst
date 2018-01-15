@@ -7,8 +7,8 @@ IoTronic is an Internet of Things resource management service for OpenStack clou
 IoTronic allows to manage Internet of Things resources as part of an OpenStack data center.
 
 * Free software: Apache license
-* Source: http://git.openstack.org/git/openstack/iotronic
-* Bugs: http://bugs.launchpad.net/iotronic
+* Source: https://git.openstack.org/cgit/openstack/iotronic/
+* Bugs: https://bugs.launchpad.net/iotronic
 
 .. contents:: Contents:
    :local:
@@ -59,7 +59,7 @@ Configuring Iotronic Host
 
 Crossbar
 ^^^^^^^^^^^^^^^^^^^^^
-Install crossbar on the Iotronic host following the `official guide <http://crossbar.io/docs/Installation-on-Ubuntu-and-Debian/>`_
+Install crossbar on the Iotronic host following the `official guide <https://crossbar.io/docs/Installation-on-Linux/>`_
 
 
 Iotronic Installation 
