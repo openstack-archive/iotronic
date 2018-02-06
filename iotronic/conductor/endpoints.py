@@ -1,5 +1,6 @@
-# coding=utf-8
-
+# Copyright 2017 MDSLAB - University of Messina
+# All Rights Reserved.
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -12,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import cPickle as cpickle
+import _pickle as cpickle
 from iotronic.common import exception
 from iotronic.common import states
 from iotronic.conductor.provisioner import Provisioner

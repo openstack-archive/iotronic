@@ -87,7 +87,7 @@ def board_on_leave(session_id):
     board = objects.Board.get_by_uuid(ctxt, old_session.board_uuid)
     board.status = states.OFFLINE
     board.save()
-    LOG.debug('Board %s is now  %s', old_session.uuid, states.OFFLINE)
+    LOG.debug('Board %s is now  %s', board.uuid, states.OFFLINE)
 
 
 def connection(uuid, session):

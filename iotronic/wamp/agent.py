@@ -13,10 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from autobahn.twisted import wamp
-from autobahn.twisted import websocket
-from autobahn.wamp import types
-from twisted.internet.defer import inlineCallbacks
+import asyncio
+import txaio
 
 from iotronic.common import exception
 from iotronic.common.i18n import _LI
@@ -26,13 +24,14 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_messaging.rpc import dispatcher
-import threading
+
 from threading import Thread
-from twisted.internet.protocol import ReconnectingClientFactory
-from twisted.internet import reactor
+
 
 import os
 import signal
+
+from autobahn.asyncio.component import Component
 
 LOG = logging.getLogger(__name__)
 
@@ -58,114 +57,38 @@ wamp_opts = [
 CONF = cfg.CONF
 CONF.register_opts(wamp_opts, 'wamp')
 
-shared_result = {}
+txaio.start_logging(level="info")
+
 wamp_session_caller = None
 AGENT_HOST = None
+LOOP = None
+connected = False
 
 
-def wamp_request(e, kwarg, session):
-    id = threading.current_thread().ident
-    shared_result[id] = {}
-    shared_result[id]['result'] = None
-
-    def success(d):
-        shared_result[id]['result'] = d
-        LOG.debug("DEVICE sent: %s", str(d))
-        e.set()
-        return shared_result[id]['result']
-
-    def fail(failure):
-        shared_result[id]['result'] = failure
-        LOG.error("WAMP FAILURE: %s", str(failure))
-        e.set()
-        return shared_result[id]['result']
-
-    LOG.debug("Calling %s...", kwarg['wamp_rpc_call'])
-    d = session.wamp_session.call(wamp_session_caller,
-                                  kwarg['wamp_rpc_call'], *kwarg['data'])
-    d.addCallback(success)
-    d.addErrback(fail)
+async def wamp_request(kwarg):
+    LOG.debug("calling: " + kwarg['wamp_rpc_call'])
+    d = await wamp_session_caller.call(kwarg['wamp_rpc_call'], *kwarg['data'])
+    return d
 
 
 # OSLO ENDPOINT
 class WampEndpoint(object):
-    def __init__(self, wamp_session, agent_uuid):
-        self.wamp_session = wamp_session
+    def __init__(self, agent_uuid):
         setattr(self, agent_uuid + '.s4t_invoke_wamp', self.s4t_invoke_wamp)
 
     def s4t_invoke_wamp(self, ctx, **kwarg):
-        e = threading.Event()
-        LOG.debug("CONDUCTOR sent me:", kwarg)
+        LOG.debug("CONDUCTOR sent me: " + kwarg['wamp_rpc_call'])
 
-        th = threading.Thread(target=wamp_request, args=(e, kwarg, self))
-        th.start()
+        r = asyncio.run_coroutine_threadsafe(wamp_request(kwarg), LOOP)
 
-        e.wait()
-        LOG.debug("result received from wamp call: %s",
-                  str(shared_result[th.ident]['result']))
-
-        result = shared_result[th.ident]['result']
-        del shared_result[th.ident]['result']
-        return result
-
-
-class WampFrontend(wamp.ApplicationSession):
-    @inlineCallbacks
-    def onJoin(self, details):
-        global wamp_session_caller, AGENT_HOST
-        wamp_session_caller = self
-
-        import iotronic.wamp.functions as fun
-
-        self.subscribe(fun.board_on_leave, 'wamp.session.on_leave')
-        self.subscribe(fun.board_on_join, 'wamp.session.on_join')
-
-        try:
-            if CONF.wamp.register_agent:
-                self.register(fun.registration, u'stack4things.register')
-                LOG.info("I have been set as registration agent")
-            self.register(fun.connection,
-                          AGENT_HOST + u'.stack4things.connection')
-            self.register(fun.echo,
-                          AGENT_HOST + u'.stack4things.echo')
-            LOG.info("procedure registered")
-        except Exception as e:
-            LOG.error("could not register procedure: {0}".format(e))
-
-        LOG.info("WAMP session ready.")
-
-        session_l = yield self.call(u'wamp.session.list')
-        session_l.remove(details.session)
-        fun.update_sessions(session_l)
-
-    def onDisconnect(self):
-        LOG.info("disconnected")
-
-
-class WampClientFactory(websocket.WampWebSocketClientFactory,
-                        ReconnectingClientFactory):
-    maxDelay = 30
-
-    def clientConnectionFailed(self, connector, reason):
-        # print "reason:", reason
-        LOG.warning("Wamp Connection Failed.")
-        ReconnectingClientFactory.clientConnectionFailed(self,
-                                                         connector, reason)
-
-    def clientConnectionLost(self, connector, reason):
-        # print "reason:", reason
-        LOG.warning("Wamp Connection Lost.")
-        ReconnectingClientFactory.clientConnectionLost(self,
-                                                       connector, reason)
+        return r.result()
 
 
 class RPCServer(Thread):
     def __init__(self):
-        global AGENT_HOST
-
         # AMQP CONFIG
         endpoints = [
-            WampEndpoint(WampFrontend, AGENT_HOST),
+            WampEndpoint(AGENT_HOST),
         ]
 
         Thread.__init__(self)
@@ -191,28 +114,84 @@ class RPCServer(Thread):
 
 class WampManager(object):
     def __init__(self):
-        component_config = types.ComponentConfig(
-            realm=unicode(CONF.wamp.wamp_realm))
-        session_factory = wamp.ApplicationSessionFactory(
-            config=component_config)
-        session_factory.session = WampFrontend
-        transport_factory = WampClientFactory(session_factory,
-                                              url=CONF.wamp.wamp_transport_url)
-
-        transport_factory.autoPingInterval = CONF.wamp.autoPingInterval
-        transport_factory.autoPingTimeout = CONF.wamp.autoPingTimeout
 
         LOG.debug("wamp url: %s wamp realm: %s",
                   CONF.wamp.wamp_transport_url, CONF.wamp.wamp_realm)
-        websocket.connectWS(transport_factory)
+
+        self.loop = asyncio.get_event_loop()
+        global LOOP
+        LOOP = self.loop
+
+        comp = Component(
+            transports=CONF.wamp.wamp_transport_url,
+            realm=CONF.wamp.wamp_realm
+        )
+
+        self.comp = comp
+
+        @comp.on_join
+        async def onJoin(session, details):
+
+            global connected
+            connected = True
+
+            global wamp_session_caller, AGENT_HOST
+            wamp_session_caller = session
+
+            import iotronic.wamp.functions as fun
+
+            session.subscribe(fun.board_on_leave,
+                              'wamp.session.on_leave')
+            session.subscribe(fun.board_on_join,
+                              'wamp.session.on_join')
+
+            try:
+                if CONF.wamp.register_agent:
+                    session.register(fun.registration,
+                                     u'stack4things.register')
+                    LOG.info("I have been set as registration agent")
+                session.register(fun.connection,
+                                 AGENT_HOST +
+                                 + u'.stack4things.connection')
+                session.register(fun.echo,
+                                 AGENT_HOST +
+                                 + u'.stack4things.echo')
+                LOG.debug("procedure registered")
+
+            except Exception as e:
+                LOG.error("could not register procedure: {0}".format(e))
+
+            LOG.info("WAMP session ready.")
+
+            session_l = await session.call(u'wamp.session.list')
+            session_l.remove(details.session)
+            fun.update_sessions(session_l)
+
+        @comp.on_leave
+        async def onLeave(session, details):
+            LOG.warning('WAMP Session Left: ' + str(details))
+
+        @comp.on_disconnect
+        async def onDisconnect(session, was_clean):
+            LOG.warning('WAMP Transport Left: ' + str(was_clean))
+
+            global connected
+            connected = False
+            if not connected:
+                comp.start(self.loop)
 
     def start(self):
         LOG.info("Starting WAMP server...")
-        reactor.run()
+        self.comp.start(self.loop)
+        self.loop.run_forever()
 
     def stop(self):
-        LOG.info("Stopping WAMP-agent server...")
-        reactor.stop()
+        LOG.info("Stopping WAMP server...")
+
+        # Canceling pending tasks and stopping the loop
+        asyncio.gather(*asyncio.Task.all_tasks()).cancel()
+        # Stopping the loop
+        self.loop.stop()
         LOG.info("WAMP server stopped.")
 
 
@@ -222,8 +201,12 @@ class WampAgent(object):
         signal.signal(signal.SIGINT, self.stop_handler)
 
         logging.register_options(CONF)
+
         CONF(project='iotronic')
         logging.setup(CONF, "iotronic-wamp-agent")
+
+        if CONF.debug:
+            txaio.start_logging(level="debug")
 
         # to be removed asap
         self.host = host

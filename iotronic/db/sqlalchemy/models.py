@@ -21,7 +21,6 @@ SQLAlchemy models for iot data.
 import json
 
 from oslo_config import cfg
-from oslo_db import options as db_options
 from oslo_db.sqlalchemy import models
 import six.moves.urllib.parse as urlparse
 from sqlalchemy import Boolean
@@ -43,7 +42,6 @@ _DEFAULT_SQL_CONNECTION = 'sqlite:///' + \
                           paths.state_path_def('iotronic.sqlite')
 
 cfg.CONF.register_opts(sql_opts, 'database')
-db_options.set_defaults(cfg.CONF, _DEFAULT_SQL_CONNECTION, 'iotronic.sqlite')
 
 
 def table_args():
