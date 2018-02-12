@@ -207,3 +207,46 @@ class ConductorAPI(object):
         cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
         return cctxt.call(context, 'action_plugin', plugin_uuid=plugin_uuid,
                           board_uuid=board_uuid, action=action, params=params)
+
+    def create_service(self, context, service_obj, topic=None):
+        """Add a service on the cloud
+
+        :param context: request context.
+        :param service_obj: a changed (but not saved) service object.
+        :param topic: RPC topic. Defaults to self.topic.
+        :returns: created service object
+
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'create_service',
+                          service_obj=service_obj)
+
+    def destroy_service(self, context, service_id, topic=None):
+        """Delete a service.
+
+        :param context: request context.
+        :param service_id: service id or uuid.
+        :raises: ServiceLocked if service is locked by another conductor.
+        :raises: ServiceAssociated if the service contains an instance
+            associated with it.
+        :raises: InvalidState if the service is in the wrong provision
+            state to perform deletion.
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'destroy_service', service_id=service_id)
+
+
+    def update_service(self, context, service_obj, topic=None):
+        """Synchronously, have a conductor update the service's information.
+
+        Update the service's information in the database and
+        return a service object.
+
+        :param context: request context.
+        :param service_obj: a changed (but not saved) service object.
+        :param topic: RPC topic. Defaults to self.topic.
+        :returns: updated service object, including all fields.
+
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'update_service', service_obj=service_obj)

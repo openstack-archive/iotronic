@@ -119,6 +119,30 @@ def get_rpc_plugin(plugin_ident):
 
     raise exception.PluginNotFound(plugin=plugin_ident)
 
+def get_rpc_service(service_ident):
+    """Get the RPC service from the service uuid or logical name.
+
+    :param service_ident: the UUID or logical name of a service.
+
+    :returns: The RPC Service.
+    :raises: InvalidUuidOrName if the name or uuid provided is not valid.
+    :raises: ServiceNotFound if the service is not found.
+    """
+    # Check to see if the service_ident is a valid UUID.  If it is, treat it
+    # as a UUID.
+    if uuidutils.is_uuid_like(service_ident):
+        return objects.Service.get_by_uuid(pecan.request.context, service_ident)
+
+    # We can refer to services by their name, if the client supports it
+    # if allow_service_logical_names():
+    #    if utils.is_hostname_safe(service_ident):
+    else:
+        return objects.Service.get_by_name(pecan.request.context, service_ident)
+
+    raise exception.InvalidUuidOrName(name=service_ident)
+
+    raise exception.ServiceNotFound(service=service_ident)
+
 
 def is_valid_board_name(name):
     """Determine if the provided name is a valid board name.

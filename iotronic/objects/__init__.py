@@ -17,6 +17,7 @@ from iotronic.objects import conductor
 from iotronic.objects import injectionplugin
 from iotronic.objects import location
 from iotronic.objects import plugin
+from iotronic.objects import service
 from iotronic.objects import sessionwp
 from iotronic.objects import wampagent
 
@@ -27,6 +28,7 @@ Plugin = plugin.Plugin
 InjectionPlugin = injectionplugin.InjectionPlugin
 SessionWP = sessionwp.SessionWP
 WampAgent = wampagent.WampAgent
+Service = service.Service
 
 __all__ = (
     Conductor,
@@ -34,6 +36,7 @@ __all__ = (
     Location,
     SessionWP,
     WampAgent,
+    Service,
     Plugin,
     InjectionPlugin,
 )

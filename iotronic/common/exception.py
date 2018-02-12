@@ -593,3 +593,6 @@ class NeedParams(Invalid):
 
 class ErrorExecutionOnBoard(IotronicException):
     message = _("Error in the execution of %(call)s on %(board)s: %(error)s")
+
+class ServiceNotFound(NotFound):
+    message = _("Service %(Service)s could not be found.")

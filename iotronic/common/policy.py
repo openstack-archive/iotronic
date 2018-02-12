@@ -120,12 +120,29 @@ injection_plugin_policies = [
 
 ]
 
+service_policies = [
+    policy.RuleDefault('iot:service:get',
+                       'rule:is_admin or rule:is_iot_member',
+                       description='Retrieve Service records'),
+    policy.RuleDefault('iot:service:create',
+                       'rule:is_iot_member',
+                       description='Create Service records'),
+    policy.RuleDefault('iot:service:get_one', 'rule:admin_or_owner',
+                       description='Retrieve a Service record'),
+    policy.RuleDefault('iot:service:delete', 'rule:admin_or_owner',
+                       description='Delete Service records'),
+    policy.RuleDefault('iot:service:update', 'rule:admin_or_owner',
+                       description='Update Service records'),
+
+]
+
 
 def list_policies():
     policies = (default_policies
                 + board_policies
                 + plugin_policies
                 + injection_plugin_policies
+                + service_policies
                 )
     return policies
 

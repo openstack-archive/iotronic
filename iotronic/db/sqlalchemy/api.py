@@ -153,6 +153,15 @@ class Connection(api.Connection):
 
         return query
 
+
+    def _add_services_filters(self, query, filters):
+        if filters is None:
+            filters = []
+
+        if 'owner' in filters:
+                query = query.filter(models.Plugin.owner == filters['owner'])
+        return query
+
     def _add_wampagents_filters(self, query, filters):
         if filters is None:
             filters = []
@@ -664,3 +673,92 @@ class Connection(api.Connection):
             models.InjectionPlugin).filter_by(
             board_uuid=board_uuid)
         return query.all()
+
+    # SERVICE api
+
+    def get_service_by_id(self, service_id):
+        query = model_query(models.Service).filter_by(id=service_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ServiceNotFound(service=service_id)
+
+    def get_service_by_uuid(self, service_uuid):
+        query = model_query(models.Service).filter_by(uuid=service_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ServiceNotFound(service=service_uuid)
+
+    def get_service_by_name(self, service_name):
+        query = model_query(models.Service).filter_by(name=service_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ServiceNotFound(service=service_name)
+
+    def destroy_service(self, service_id):
+
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Service, session=session)
+            query = add_identity_filter(query, service_id)
+            try:
+                service_ref = query.one()
+            except NoResultFound:
+                raise exception.ServiceNotFound(service=service_id)
+
+            # Get service ID, if an UUID was supplied. The ID is
+            # required for deleting all ports, attached to the service.
+            if uuidutils.is_uuid_like(service_id):
+                service_id = service_ref['id']
+
+            query.delete()
+
+    def update_service(self, service_id, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing Service.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            return self._do_update_service(service_id, values)
+        except db_exc.DBDuplicateEntry as e:
+            if 'name' in e.columns:
+                raise exception.DuplicateName(name=values['name'])
+            elif 'uuid' in e.columns:
+                raise exception.ServiceAlreadyExists(uuid=values['uuid'])
+            else:
+                raise e
+
+    def create_service(self, values):
+        # ensure defaults are present for new services
+        if 'uuid' not in values:
+            values['uuid'] = uuidutils.generate_uuid()
+        service = models.Service()
+        service.update(values)
+        try:
+            service.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ServiceAlreadyExists(uuid=values['uuid'])
+        return service
+
+    def get_service_list(self, filters=None, limit=None, marker=None,
+                        sort_key=None, sort_dir=None):
+        query = model_query(models.Service)
+        query = self._add_services_filters(query, filters)
+        return _paginate_query(models.Service, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def _do_update_service(self, service_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Service, session=session)
+            query = add_identity_filter(query, service_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ServiceNotFound(service=service_id)
+
+            ref.update(values)
+        return ref

@@ -220,3 +220,31 @@ class InjectionPlugin(Base):
     plugin_uuid = Column(String(36), ForeignKey('plugins.uuid'))
     onboot = Column(Boolean, default=False)
     status = Column(String(15))
+
+class Service(Base):
+    """Represents a service."""
+
+    __tablename__ = 'services'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_services0uuid'),
+        table_args())
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36))
+    name = Column(String(36))
+    project = Column(String(36))
+    port = Column(Integer)
+    protocol = Column(String(3))
+    extra = Column(JSONEncodedDict)
+
+
+class ExposedService(Base):
+    """Represents an exposed service on board."""
+
+    __tablename__ = 'exposed_services'
+    __table_args__ = (
+        table_args())
+    id = Column(Integer, primary_key=True)
+    board_uuid = Column(String(36), ForeignKey('boards.uuid'))
+    service_uuid = Column(String(36), ForeignKey('services.uuid'))
+    public_port = Column(Integer)
+

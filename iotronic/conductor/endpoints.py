@@ -270,3 +270,23 @@ class ConductorEndpoint(object):
 
         LOG.debug(result)
         return result
+
+    def create_service(self, ctx, service_obj):
+        new_service = serializer.deserialize_entity(ctx, service_obj)
+        LOG.debug('Creating service %s',
+                  new_service.name)
+        new_service.create()
+        return serializer.serialize_entity(ctx, new_service)
+
+    def destroy_service(self, ctx, service_id):
+        LOG.info('Destroying service with id %s',
+                 service_id)
+        service = objects.Service.get_by_uuid(ctx, service_id)
+        service.destroy()
+        return
+
+    def update_service(self, ctx, service_obj):
+        service = serializer.deserialize_entity(ctx, service_obj)
+        LOG.debug('Updating service %s', service.name)
+        service.save()
+        return serializer.serialize_entity(ctx, service)

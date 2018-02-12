@@ -423,3 +423,54 @@ class Connection(object):
         :returns: A list of InjectionPlugins on the board.
 
         """
+
+    @abc.abstractmethod
+    def get_service_by_id(self, service_id):
+        """Return a service.
+
+        :param service_id: The id of a service.
+        :returns: A service.
+        """
+
+    @abc.abstractmethod
+    def get_service_by_uuid(self, service_uuid):
+        """Return a service.
+
+        :param service_uuid: The uuid of a service.
+        :returns: A service.
+        """
+
+    @abc.abstractmethod
+    def get_service_by_name(self, service_name):
+        """Return a service.
+
+        :param service_name: The logical name of a service.
+        :returns: A service.
+        """
+
+    @abc.abstractmethod
+    def create_service(self, values):
+        """Create a new service.
+
+        :param values: A dict containing several items used to identify
+                       and track the service
+        :returns: A service.
+        """
+
+    @abc.abstractmethod
+    def destroy_service(self, service_id):
+        """Destroy a service and all associated interfaces.
+
+        :param service_id: The id or uuid of a service.
+        """
+
+    @abc.abstractmethod
+    def update_service(self, service_id, values):
+        """Update properties of a service.
+
+        :param service_id: The id or uuid of a service.
+        :param values: Dict of values to update.
+        :returns: A service.
+        :raises: ServiceAssociated
+        :raises: ServiceNotFound
+        """
