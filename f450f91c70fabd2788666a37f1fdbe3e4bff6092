@@ -1,0 +1,8 @@
+Code-Review+2: Nicola Peditto <npeditto@unime.it>
+Workflow+1: Nicola Peditto <npeditto@unime.it>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 13 Feb 2018 17:32:09 +0000
+Reviewed-on: https://review.openstack.org/544007
+Project: openstack/iotronic
+Branch: refs/heads/master
