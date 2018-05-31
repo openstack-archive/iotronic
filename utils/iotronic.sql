@@ -133,7 +133,7 @@ ENGINE = InnoDB
 AUTO_INCREMENT = 10
 DEFAULT CHARACTER SET = utf8;
 
--- -----------------------------------------------------
+
 -- Table `iotronic`.`plugins`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `iotronic`.`plugins` ;
@@ -207,6 +207,28 @@ CREATE TABLE IF NOT EXISTS `iotronic`.`services` (
 ENGINE = InnoDB
 AUTO_INCREMENT = 132
 DEFAULT CHARACTER SET = utf8;
+
+
+----------------------------------
+-- Table `iotronic`.`ports_on_boards`
+----------------------------------
+
+DROP TABLE IF EXISTS `ports_on_boards`;
+
+CREATE TABLE `ports_on_boards` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(40) NOT NULL,
+  `board_uuid` varchar(40) DEFAULT NULL,
+  `MAC_add` varchar(32) DEFAULT NULL,
+  `created_at` DATETIME DEFAULT NULL,
+  `updated_at` DATETIME DEFAULT NULL,
+  `VIF_name` varchar(30) DEFAULT NULL,
+  `network` varchar(36) NOT NULL,
+  `ip` varchar(36) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `p_board_uuid` (`board_uuid`),
+  CONSTRAINT `p_board_uuid` FOREIGN KEY (`board_uuid`) REFERENCES `boards` (`uuid`)
+) ENGINE=InnoDB AUTO_INCREMENT=417 DEFAULT CHARSET=utf8;
 
 -- -----------------------------------------------------
 -- Table `iotronic`.`exposed_services`

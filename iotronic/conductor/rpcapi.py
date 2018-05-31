@@ -276,3 +276,36 @@ class ConductorAPI(object):
 
         return cctxt.call(context, 'restore_services_on_board',
                           board_uuid=board_uuid)
+
+    def create_port_on_board(self, context, board_uuid, network,
+                             subnet, sec_groups, topic=None):
+        """Add a port on a Board
+
+        :param context: request context.
+        :param board_uuid: the uuid of the board.
+        :param network: the network uuid where the port will be created.
+        :param subnet: the subnet uuid where the port will be created.
+        :param sec_groups: security groups associated to the port.
+        :param topic: RPC topic. Defaults to self.topic.
+        :returns: created port object
+
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'create_port_on_board',
+                          board_uuid=board_uuid, network_uuid=network,
+                          subnet_uuid=subnet, security_groups=sec_groups)
+
+    def remove_port_from_board(self, context, board_uuid,
+                               port_uuid, topic=None):
+        """remove a port from a Board
+
+                :param context: request context.
+                :param board_uuid: the board uuid where the port resides.
+                :param port_uuid: the UUID of the port.
+                :returns: delete port object
+
+                """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'remove_VIF_from_board',
+                          board_uuid=board_uuid,
+                          port_uuid=port_uuid)
