@@ -613,3 +613,15 @@ class ExposedServiceNotFound(NotFound):
 
 class NoExposedServices(NotFound):
     message = _("No exposed services on the board %(uuid)s.")
+
+
+class NoPorts(NotFound):
+    message = _("No ports exist on the board %(uuid)s.")
+
+
+class NoPortsManaged(NotFound):
+    message = _("No ports are managed by the wamp agent %(id)s.")
+
+
+class NetworkError(IotronicException):
+    message = _("Network operation failure.")

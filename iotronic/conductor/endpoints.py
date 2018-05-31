@@ -15,6 +15,7 @@
 
 import _pickle as cpickle
 from iotronic.common import exception
+from iotronic.common import neutron
 from iotronic.common import states
 from iotronic.conductor.provisioner import Provisioner
 from iotronic import objects
@@ -23,12 +24,14 @@ from iotronic.wamp import wampmessage as wm
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
-
 import random
+
 
 LOG = logging.getLogger(__name__)
 
 serializer = objects_base.IotronicObjectSerializer()
+
+Port = list()
 
 
 def get_best_agent(ctx):
@@ -365,7 +368,6 @@ class ConductorEndpoint(object):
     def restore_services_on_board(self, ctx, board_uuid):
         LOG.info('Restoring the services into the board %s',
                  board_uuid)
-
         exposed_list = objects.ExposedService.get_by_board_uuid(ctx,
                                                                 board_uuid)
 
@@ -375,3 +377,115 @@ class ConductorEndpoint(object):
                                   (service, exposed.public_port))
 
         return 0
+
+    def create_port_on_board(self, ctx, board_uuid, network_uuid,
+                             subnet_uuid, security_groups=None):
+
+        LOG.info('Creation of a port on the board %s in the network',
+                 board_uuid)
+
+        board = objects.Board.get_by_uuid(ctx, board_uuid)
+        port_iotronic = objects.Port(ctx)
+
+        subnet_info = neutron.subnet_info(subnet_uuid)
+        cidr = str(subnet_info['subnet']['cidr'])
+        slash = cidr.split("/", 1)[1]
+        try:
+
+            port = neutron.add_port_to_network(board, network_uuid,
+                                               subnet_uuid, security_groups)
+            p = str(port['port']['id'])
+
+            port_socat = random.randint(10000, 20000)
+
+            i = 0
+            while i < len(Port):
+                if Port[i] == port_socat:
+                    i = 0
+                    port_socat = random.randint(10000, 20000)
+                i += 1
+
+            global Port
+            Port.insert(0, port_socat)
+            r_tcp_port = str(port_socat)
+
+            s4t_topic = 'create_tap_interface'
+            full_topic = str(board.agent) + '.' + s4t_topic
+            self.target.topic = full_topic
+
+            try:
+                LOG.info('Creation of the VIF on the board')
+                self.execute_on_board(ctx, board_uuid, "Create_VIF",
+                                      (r_tcp_port,))
+
+                try:
+                    LOG.debug('starting the wamp client')
+                    self.wamp_agent_client.call(ctx, full_topic,
+                                                port_uuid=p,
+                                                tcp_port=r_tcp_port)
+
+                    try:
+                        LOG.info('Updating the DB')
+                        VIF = str("iotronic" + str(r_tcp_port))
+                        port_iotronic.VIF_name = VIF
+                        port_iotronic.uuid = port['port']['id']
+                        port_iotronic.MAC_add = port['port']['mac_address']
+                        port_iotronic.board_uuid = str(board_uuid)
+                        port_iotronic.network = \
+                            port['port']['fixed_ips'][0]['subnet_id']
+                        port_iotronic.ip = \
+                            port['port']['fixed_ips'][0]['ip_address']
+                        port_iotronic.create()
+
+                        try:
+                            LOG.debug('Configuration of the VIF')
+                            self.execute_on_board(ctx, board_uuid,
+                                                  "Configure_VIF",
+                                                  (port_iotronic, slash,))
+                            return port_iotronic
+
+                        except Exception:
+                            LOG.error("Error while configuring the VIF")
+
+                    except Exception as e:
+                        LOG.error('Error while updating the DB :' + str(e))
+
+                except Exception:
+                    LOG.error('wamp client error')
+
+            except Exception:
+                LOG.error('Error while creating the VIF')
+
+        except Exception as e:
+            LOG.error(str(e))
+
+    def remove_VIF_from_board(self, ctx, board_uuid, port_uuid):
+
+        LOG.info('removing the port %s from board %s',
+                 port_uuid, board_uuid)
+
+        board = objects.Board.get_by_uuid(ctx, board_uuid)
+        port = objects.Port.get_by_uuid(ctx, port_uuid)
+        VIF_name = str(port.VIF_name)
+
+        try:
+
+            self.execute_on_board(ctx, board_uuid, "Remove_VIF", (VIF_name,))
+            port_num = int(VIF_name[8:])
+            global Port
+            Port.remove(port_num)
+            try:
+                LOG.info("Removing the port from Neutron "
+                         "and Iotronic databases")
+                neutron.delete_port(board.agent, port_uuid)
+                LOG.info("Port removed from Neutron DB")
+                port.destroy()
+                LOG.info("Port removed from Iotronic DB")
+
+                return port
+
+            except Exception as e:
+                LOG.error(str(e))
+
+        except Exception as e:
+            LOG.error(str(e))

@@ -134,60 +134,6 @@ AUTO_INCREMENT = 10
 DEFAULT CHARACTER SET = utf8;
 
 -- -----------------------------------------------------
--- Table `iotronic`.`plugins`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `iotronic`.`plugins` ;
-
-CREATE TABLE IF NOT EXISTS `iotronic`.`plugins` (
-  `created_at` DATETIME NULL DEFAULT NULL,
-  `updated_at` DATETIME NULL DEFAULT NULL,
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `uuid` VARCHAR(36) NOT NULL,
-  `name` VARCHAR(255) NULL DEFAULT NULL,
-  `public` TINYINT(1) NOT NULL DEFAULT '0',
-  `code` TEXT NULL DEFAULT NULL,
-  `callable` TINYINT(1) NOT NULL,
-  `parameters` TEXT NULL DEFAULT NULL,
-  `extra` TEXT NULL DEFAULT NULL,
-  `owner` VARCHAR(36) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `uuid` (`uuid` ASC))
-ENGINE = InnoDB
-AUTO_INCREMENT = 132
-DEFAULT CHARACTER SET = utf8;
-
--- -----------------------------------------------------
--- Table `iotronic`.`injected_plugins`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `iotronic`.`injection_plugins` ;
-
-CREATE TABLE IF NOT EXISTS `iotronic`.`injection_plugins` (
-  `created_at` DATETIME NULL DEFAULT NULL,
-  `updated_at` DATETIME NULL DEFAULT NULL,
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `board_uuid` VARCHAR(36) NOT NULL,
-  `plugin_uuid` VARCHAR(36) NOT NULL,
-  `status` VARCHAR(15) NOT NULL DEFAULT 'injected',
-  `onboot` TINYINT(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  INDEX `board_uuid` (`board_uuid` ASC),
-  CONSTRAINT `board_uuid`
-    FOREIGN KEY (`board_uuid`)
-    REFERENCES `iotronic`.`boards` (`uuid`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  INDEX `plugin_uuid` (`plugin_uuid` ASC),
-  CONSTRAINT `plugin_uuid`
-    FOREIGN KEY (`plugin_uuid`)
-    REFERENCES `iotronic`.`plugins` (`uuid`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE)
-ENGINE = InnoDB
-AUTO_INCREMENT = 132
-DEFAULT CHARACTER SET = utf8;
-
-
--- -----------------------------------------------------
 -- Table `iotronic`.`services`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `iotronic`.`services` ;
@@ -207,6 +153,28 @@ CREATE TABLE IF NOT EXISTS `iotronic`.`services` (
 ENGINE = InnoDB
 AUTO_INCREMENT = 132
 DEFAULT CHARACTER SET = utf8;
+
+
+----------------------------------
+-- Table `iotronic`.`ports_on_boards`
+----------------------------------
+
+DROP TABLE IF EXISTS `ports_on_boards`;
+
+CREATE TABLE `ports_on_boards` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(40) NOT NULL,
+  `board_uuid` varchar(40) DEFAULT NULL,
+  `MAC_add` varchar(32) DEFAULT NULL,
+  `created_at` DATETIME DEFAULT NULL,
+  `updated_at` DATETIME DEFAULT NULL,
+  `VIF_name` varchar(30) DEFAULT NULL,
+  `network` varchar(36) NOT NULL,
+  `ip` varchar(36) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `p_board_uuid` (`board_uuid`),
+  CONSTRAINT `p_board_uuid` FOREIGN KEY (`board_uuid`) REFERENCES `boards` (`uuid`)
+) ENGINE=InnoDB AUTO_INCREMENT=417 DEFAULT CHARSET=utf8;
 
 -- -----------------------------------------------------
 -- Table `iotronic`.`exposed_services`

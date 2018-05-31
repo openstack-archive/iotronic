@@ -14,6 +14,8 @@
 #    under the License.
 
 import asyncio
+import subprocess
+import time
 import txaio
 
 from iotronic.common import exception
@@ -74,7 +76,11 @@ async def wamp_request(kwarg):
 # OSLO ENDPOINT
 class WampEndpoint(object):
     def __init__(self, agent_uuid):
+
         setattr(self, agent_uuid + '.s4t_invoke_wamp', self.s4t_invoke_wamp)
+
+        setattr(self, agent_uuid + '.create_tap_interface',
+                self.create_tap_interface)
 
     def s4t_invoke_wamp(self, ctx, **kwarg):
         LOG.debug("CONDUCTOR sent me: " + kwarg['wamp_rpc_call'])
@@ -82,6 +88,16 @@ class WampEndpoint(object):
         r = asyncio.run_coroutine_threadsafe(wamp_request(kwarg), LOOP)
 
         return r.result()
+
+    def create_tap_interface(self, ctx, port_uuid, tcp_port):
+        time.sleep(12)
+        LOG.debug('Creating tap interface on the wamp agent host')
+        p = subprocess.Popen('socat -d -d TCP:localhost:' + tcp_port +
+                             ',reuseaddr,forever,interval=10 TUN,tun-type=tap,'
+                             'tun-name=tap' + port_uuid[0:14] +
+                             ',up ', shell=True, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+        return 1
 
 
 class RPCServer(Thread):
@@ -96,19 +112,30 @@ class RPCServer(Thread):
         target = oslo_messaging.Target(topic=AGENT_HOST + '.s4t_invoke_wamp',
                                        server='server1')
 
+        target1 = oslo_messaging.Target(topic=AGENT_HOST +
+                                        '.create_tap_interface',
+                                        server='server1')
+
         access_policy = dispatcher.DefaultRPCAccessPolicy
         self.server = oslo_messaging.get_rpc_server(
             transport, target,
             endpoints, executor='threading',
             access_policy=access_policy)
 
+        self.server1 = oslo_messaging.get_rpc_server(
+            transport, target1,
+            endpoints, executor='threading',
+            access_policy=access_policy)
+
     def run(self):
         LOG.info("Starting AMQP server... ")
         self.server.start()
+        self.server1.start()
 
     def stop(self):
         LOG.info("Stopping AMQP server... ")
         self.server.stop()
+        self.server1.stop()
         LOG.info("AMQP server stopped. ")
 
 

@@ -248,3 +248,23 @@ class ExposedService(Base):
     board_uuid = Column(String(36), ForeignKey('boards.uuid'))
     service_uuid = Column(String(36), ForeignKey('services.uuid'))
     public_port = Column(Integer)
+
+
+class Port(Base):
+    """Represents a port on board."""
+
+    __tablename__ = 'ports_on_boards'
+#    __table_args__ = (
+#        schema.UniqueConstraint('port_uuid', name='uniq_ports0uuid'),
+#        table_args()
+#    )
+    id = Column(Integer, primary_key=True)
+    board_uuid = Column(String(40), ForeignKey('boards.uuid'))
+    uuid = Column(String(40))
+    VIF_name = Column(String(30))
+#    project = Column(String(36))
+    MAC_add = Column(String(32))
+    ip = Column(String(36))
+#    status = Column(String(36))
+    network = Column(String(36))
+#    security_groups = Column(String(40))

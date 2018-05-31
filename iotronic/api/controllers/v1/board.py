@@ -26,6 +26,10 @@ from pecan import rest
 import wsme
 from wsme import types as wtypes
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
+
+
 _DEFAULT_RETURN_FIELDS = ('name', 'code', 'status', 'uuid', 'session', 'type')
 
 
@@ -117,6 +121,45 @@ class BoardCollection(collection.Collection):
         return collection
 
 
+class Port(base.APIBase):
+
+    board_uuid = types.uuid
+    uuid = types.uuid
+    VIF_name = wtypes.text
+    MAC_add = wtypes.text
+    ip = wtypes.text
+    network = wtypes.text
+
+    def __init__(self, **kwargs):
+        self.fields = []
+        fields = list(objects.Port.fields)
+        fields.remove('board_uuid')
+        for k in fields:
+            # Skip fields we do not expose.
+            if not hasattr(self, k):
+                continue
+            self.fields.append(k)
+            setattr(self, k, kwargs.get(k, wtypes.Unset))
+        setattr(self, 'uuid', kwargs.get('uuid', wtypes.Unset))
+
+
+class PortCollection(collection.Collection):
+
+    """API representation of a collection of ports."""
+
+    ports = [Port]
+
+    def __init__(self, **kwargs):
+        self._type = 'ports'
+
+    @staticmethod
+    def get_list(ports, fields=None):
+        collection = PortCollection()
+        collection.ports = [Port(**n.as_dict())
+                            for n in ports]
+        return collection
+
+
 class InjectionPlugin(base.APIBase):
     plugin = types.uuid_or_name
     board_uuid = types.uuid_or_name
@@ -194,6 +237,12 @@ class PluginAction(base.APIBase):
 class ServiceAction(base.APIBase):
     action = wsme.wsattr(wtypes.text)
     parameters = types.jsontype
+
+
+class Network(base.APIBase):
+    network = types.jsontype
+    subnet = types.jsontype
+    security_groups = types.jsontype
 
 
 class BoardPluginsController(rest.RestController):
@@ -401,12 +450,93 @@ class BoardServicesController(rest.RestController):
         return self._get_services_on_board_collection(rpc_board.uuid)
 
 
+class BoardPortsController(rest.RestController):
+
+    def __init__(self, board_ident):
+        self.board_ident = board_ident
+
+    def _get_ports_on_board_collection(self, board_uuid, fields=None):
+        filters = {}
+        filters['board_uuid'] = board_uuid
+        ports = objects.Port.list(pecan.request.context,
+                                  filters=filters)
+
+        return PortCollection.get_list(ports, fields=fields)
+
+    def get_port_detail(self, board_uuid, port_uuid):
+        filters = {}
+        filters['board_uuid'] = board_uuid
+        ports = objects.Port.list(pecan.request.context,
+                                  filters=filters)
+        for port in ports:
+            if port.uuid == port_uuid:
+                return port
+
+    @expose.expose(wtypes.text, types.uuid_or_name, body=Network,
+                   status_code=200)
+    def put(self, Network):
+
+        if not Network.network:
+            raise exception.MissingParameterValue(
+                ("Network is not specified."))
+
+        rpc_board = api_utils.get_rpc_board(self.board_ident)
+
+        rpc_board.check_if_online()
+
+        result = pecan.request.rpcapi.\
+            create_port_on_board(pecan.request.context, rpc_board.uuid,
+                                 Network.network, Network.subnet,
+                                 Network.security_groups)
+        return result
+
+    @expose.expose(wtypes.text, types.uuid_or_name,
+                   status_code=204)
+    def delete(self, port):
+
+        if not port:
+            raise exception.MissingParameterValue(
+                ("Port is not specified."))
+
+        rpc_board = api_utils.get_rpc_board(self.board_ident)
+        rpc_port = api_utils.get_rpc_port(port)
+
+        rpc_board.check_if_online()
+
+        result = pecan.request.rpcapi.remove_port_from_board(
+            pecan.request.context, rpc_board.uuid, rpc_port.uuid)
+
+        return result
+
+    @expose.expose(PortCollection, status_code=200)
+    def get_all(self):
+
+        rpc_board = api_utils.get_rpc_board(self.board_ident)
+
+        cdict = pecan.request.context.to_policy_values()
+        cdict['owner'] = rpc_board.owner
+        policy.authorize('iot:port_on_board:get', cdict, cdict)
+
+        return self._get_ports_on_board_collection(rpc_board.uuid)
+
+    @expose.expose(Port, types.uuid_or_name, status_code=200)
+    def get_one(self, port_ident):
+        rpc_board = api_utils.get_rpc_board(self.board_ident)
+
+        cdict = pecan.request.context.to_policy_values()
+        cdict['owner'] = rpc_board.owner
+        policy.authorize('iot:port_on_board:get', cdict, cdict)
+
+        return self.get_port_detail(rpc_board, port_ident)
+
+
 class BoardsController(rest.RestController):
     """REST controller for Boards."""
 
     _subcontroller_map = {
         'plugins': BoardPluginsController,
         'services': BoardServicesController,
+        'ports': BoardPortsController,
     }
 
     invalid_sort_key_list = ['extra', 'location']
@@ -630,5 +760,4 @@ class BoardsController(rest.RestController):
 
         return self._get_boards_collection(status, marker,
                                            limit, sort_key, sort_dir,
-                                           project=project,
-                                           fields=fields)
+                                           project=project, fields=fields)
