@@ -18,6 +18,7 @@ import time
 import txaio
 
 from iotronic.common import exception
+from iotronic.common.i18n import _
 from iotronic.common.i18n import _LI
 from iotronic.common.i18n import _LW
 from iotronic.db import api as dbapi
@@ -36,6 +37,18 @@ import signal
 from autobahn.asyncio.component import Component
 
 LOG = logging.getLogger(__name__)
+
+service_opts = [
+    cfg.StrOpt('notification_level',
+               choices=[('debug', _('"debug" level')),
+                        ('info', _('"info" level')),
+                        ('warning', _('"warning" level')),
+                        ('error', _('"error" level')),
+                        ('critical', _('"critical" level'))],
+               help=_('Specifies the minimum level for which to send '
+                      'notifications. If not set, no notifications will '
+                      'be sent. The default is for this option to be unset.')),
+]
 
 wamp_opts = [
     cfg.StrOpt('wamp_transport_url',
@@ -62,6 +75,7 @@ wamp_opts = [
 ]
 
 CONF = cfg.CONF
+cfg.CONF.register_opts(service_opts)
 CONF.register_opts(wamp_opts, 'wamp')
 
 txaio.start_logging(level="info")
