@@ -27,6 +27,7 @@ from oslo_log import log as logging
 import oslo_messaging
 from oslo_messaging.rpc import dispatcher
 
+import importlib
 from threading import Thread
 
 import ssl
@@ -74,8 +75,15 @@ wamp_opts = [
 
 ]
 
+proxy_opts = [
+    cfg.StrOpt('proxy',
+               choices=[('nginx', _('nginx proxy')), ],
+               help=_('Proxy for webservices')),
+]
+
 CONF = cfg.CONF
 cfg.CONF.register_opts(service_opts)
+cfg.CONF.register_opts(proxy_opts)
 CONF.register_opts(wamp_opts, 'wamp')
 
 txaio.start_logging(level="info")
@@ -94,11 +102,6 @@ async def wamp_request(kwarg):
 
 # OSLO ENDPOINT
 class WampEndpoint(object):
-    def __init__(self, agent_uuid):
-        setattr(self, agent_uuid + '.s4t_invoke_wamp', self.s4t_invoke_wamp)
-
-        setattr(self, agent_uuid + '.create_tap_interface',
-                self.create_tap_interface)
 
     def s4t_invoke_wamp(self, ctx, **kwarg):
         LOG.debug("CONDUCTOR sent me: " + kwarg['wamp_rpc_call'])
@@ -106,6 +109,14 @@ class WampEndpoint(object):
         r = asyncio.run_coroutine_threadsafe(wamp_request(kwarg), LOOP)
 
         return r.result()
+
+
+class AgentEndpoint(object):
+
+    # used for testing
+    def echo(self, ctx, text):
+        LOG.debug("ECHO of " + text)
+        return text
 
     def create_tap_interface(self, ctx, port_uuid, tcp_port):
         time.sleep(12)
@@ -121,18 +132,20 @@ class WampEndpoint(object):
 class RPCServer(Thread):
     def __init__(self):
         # AMQP CONFIG
+
+        proxy = importlib.import_module("iotronic.wamp.proxies." + CONF.proxy)
+
         endpoints = [
-            WampEndpoint(AGENT_HOST),
+            WampEndpoint(),
+            AgentEndpoint(),
+            proxy.ProxyManager('iot.felooca.eu')
         ]
 
         Thread.__init__(self)
         transport = oslo_messaging.get_transport(CONF)
-        target = oslo_messaging.Target(topic=AGENT_HOST + '.s4t_invoke_wamp',
-                                       server='server1')
 
-        target1 = oslo_messaging.Target(topic=AGENT_HOST +
-                                        '.create_tap_interface',
-                                        server='server1')
+        target = oslo_messaging.Target(topic='s4t',
+                                       server=AGENT_HOST)
 
         access_policy = dispatcher.DefaultRPCAccessPolicy
         self.server = oslo_messaging.get_rpc_server(
@@ -140,20 +153,13 @@ class RPCServer(Thread):
             endpoints, executor='threading',
             access_policy=access_policy)
 
-        self.server1 = oslo_messaging.get_rpc_server(
-            transport, target1,
-            endpoints, executor='threading',
-            access_policy=access_policy)
-
     def run(self):
         LOG.info("Starting AMQP server... ")
         self.server.start()
-        self.server1.start()
 
     def stop(self):
         LOG.info("Stopping AMQP server... ")
         self.server.stop()
-        self.server1.stop()
         LOG.info("AMQP server stopped. ")
 
 
@@ -223,6 +229,10 @@ class WampManager(object):
                                  AGENT_HOST + u'.stack4things.connection')
                 session.register(fun.echo,
                                  AGENT_HOST + u'.stack4things.echo')
+                session.register(fun.alive,
+                                 AGENT_HOST + u'.stack4things.alive')
+                session.register(fun.wamp_alive,
+                                 AGENT_HOST + u'.stack4things.wamp_alive')
                 LOG.debug("procedure registered")
 
             except Exception as e:

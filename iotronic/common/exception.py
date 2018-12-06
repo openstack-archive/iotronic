@@ -142,6 +142,11 @@ class BoardAlreadyExists(Conflict):
     message = _("A board with UUID %(uuid)s already exists.")
 
 
+class BoardInvalidStatus(Conflict):
+    message = _(
+        "A board with UUID %(uuid)s has a not valid state: %(status)s.")
+
+
 class MACAlreadyExists(Conflict):
     message = _("A port with MAC address %(mac)s already exists.")
 
@@ -641,3 +646,19 @@ class FleetAlreadyExists(Conflict):
 
 class FleetAlreadyExposed(Conflict):
     message = _("A Fleet with UUID %(uuid)s already exposed.")
+
+
+class WebserviceNotFound(NotFound):
+    message = _("Webservice %(Webservice)s could not be found.")
+
+
+class WebserviceAlreadyExists(Conflict):
+    message = _("A Service with UUID %(uuid)s already exists.")
+
+
+class EnabledWebserviceNotFound(NotFound):
+    message = _("No Webservice enabled for %(enabled_webservice)s.")
+
+
+class EnabledWebserviceAlreadyExists(Conflict):
+    message = _("Already enabled for %(enabled_webservice)s.")
