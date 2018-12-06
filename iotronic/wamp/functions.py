@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from datetime import datetime
 from iotronic.common import rpc
 from iotronic.common import states
 from iotronic.conductor import rpcapi
@@ -43,6 +44,19 @@ ctxt = cont()
 def echo(data):
     LOG.info("ECHO: %s" % data)
     return data
+
+
+def wamp_alive(board_uuid, board_name):
+    LOG.debug("Alive board: %s (%s)", board_uuid, board_name)
+    return "Iotronic alive @ " + datetime.now().strftime(
+        '%Y-%m-%dT%H:%M:%S.%f')
+
+
+# to be removed
+def alive():
+    LOG.debug("Alive")
+    return "Iotronic alive @ " + datetime.now().strftime(
+        '%Y-%m-%dT%H:%M:%S.%f')
 
 
 def update_sessions(session_list):

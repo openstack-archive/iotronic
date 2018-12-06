@@ -351,3 +351,47 @@ class ConductorAPI(object):
         """
         cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
         return cctxt.call(context, 'update_fleet', fleet_obj=fleet_obj)
+
+    def create_webservice(self, context, webservice_obj, topic=None):
+        """Add a webservice on the cloud
+
+        :param context: request context.
+        :param webservice_obj: a changed (but not saved) webservice object.
+        :param topic: RPC topic. Defaults to self.topic.
+        :returns: created webservice object
+
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'create_webservice',
+                          webservice_obj=webservice_obj)
+
+    def destroy_webservice(self, context, webservice_id, topic=None):
+        """Delete a webservice.
+
+        :param context: request context.
+        :param webservice_id: webservice id or uuid.
+        :raises: WebserviceLocked if webservice is locked by another conductor.
+        :raises: WebserviceAssociated if the webservice contains an instance
+            associated with it.
+        :raises: InvalidState if the webservice is in the wrong provision
+            state to perform deletion.
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'destroy_webservice',
+                          webservice_id=webservice_id)
+
+    def enable_webservice(self, context, dns, zone, email, board, topic=None):
+        """Eneble a webservice on the board
+
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'enable_webservice',
+                          dns=dns, zone=zone, email=email, board_uuid=board)
+
+    def disable_webservice(self, context, board_uuid, topic=None):
+        """Disable webservice manager.
+
+        """
+        cctxt = self.client.prepare(topic=topic or self.topic, version='1.0')
+        return cctxt.call(context, 'disable_webservice',
+                          board_uuid=board_uuid)

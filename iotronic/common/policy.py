@@ -181,6 +181,31 @@ fleet_policies = [
 
 ]
 
+webservice_policies = [
+    policy.RuleDefault('iot:webservice:get',
+                       'rule:is_admin or rule:is_iot_member',
+                       description='Retrieve Webservice records'),
+    policy.RuleDefault('iot:webservice:create',
+                       'rule:is_iot_member',
+                       description='Create Webservice records'),
+    policy.RuleDefault('iot:webservice:get_one', 'rule:admin_or_owner',
+                       description='Retrieve a Webservice record'),
+    policy.RuleDefault('iot:webservice:delete', 'rule:admin_or_owner',
+                       description='Delete Webservice records'),
+    policy.RuleDefault('iot:webservice:update', 'rule:admin_or_owner',
+                       description='Update Webservice records'),
+
+]
+
+enabledwebservice_policies = [
+    policy.RuleDefault('iot:enabledwebservice:get',
+                       'rule:is_admin or rule:is_iot_member',
+                       description='Retrieve EnabledWebservice records'),
+    policy.RuleDefault('iot:enabledwebservice:get_one',
+                       'rule:admin_or_owner',
+                       description='Retrieve a EnabledWebservice record'),
+]
+
 
 def list_policies():
     policies = (default_policies
@@ -191,6 +216,8 @@ def list_policies():
                 + exposed_service_policies
                 + port_on_board_policies
                 + fleet_policies
+                + webservice_policies
+                + enabledwebservice_policies
                 )
     return policies
 

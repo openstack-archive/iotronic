@@ -14,9 +14,12 @@
 from iotronic.api.controllers import base
 from iotronic.api.controllers import link
 from iotronic.api.controllers.v1 import collection
+from iotronic.api.controllers.v1.enabledwebservice import EnabledWebservice
 from iotronic.api.controllers.v1 import location as loc
 from iotronic.api.controllers.v1 import types
 from iotronic.api.controllers.v1 import utils as api_utils
+from iotronic.api.controllers.v1.webservice import Webservice
+from iotronic.api.controllers.v1.webservice import WebserviceCollection
 from iotronic.api import expose
 from iotronic.common import exception
 from iotronic.common import policy
@@ -27,11 +30,13 @@ import wsme
 from wsme import types as wtypes
 
 from oslo_log import log as logging
-LOG = logging.getLogger(__name__)
 
+LOG = logging.getLogger(__name__)
 
 _DEFAULT_RETURN_FIELDS = ('name', 'code', 'status', 'uuid', 'session', 'type',
                           'fleet')
+_DEFAULT_WEBSERVICE_RETURN_FIELDS = ('name', 'uuid', 'port', 'board_uuid',
+                                     'extra')
 
 
 class Board(base.APIBase):
@@ -124,7 +129,6 @@ class BoardCollection(collection.Collection):
 
 
 class Port(base.APIBase):
-
     board_uuid = types.uuid
     uuid = types.uuid
     VIF_name = wtypes.text
@@ -146,7 +150,6 @@ class Port(base.APIBase):
 
 
 class PortCollection(collection.Collection):
-
     """API representation of a collection of ports."""
 
     ports = [Port]
@@ -373,7 +376,6 @@ class BoardPluginsController(rest.RestController):
 
 
 class BoardServicesController(rest.RestController):
-
     _custom_actions = {
         'action': ['POST'],
         'restore': ['GET']
@@ -452,6 +454,167 @@ class BoardServicesController(rest.RestController):
         return self._get_services_on_board_collection(rpc_board.uuid)
 
 
+class BoardWebservicesController(rest.RestController):
+    _custom_actions = {
+        'enable': ['POST'],
+        'disable': ['DELETE']
+    }
+
+    invalid_sort_key_list = ['extra', ]
+
+    def __init__(self, board_ident):
+        self.board_ident = board_ident
+
+    def _get_webservices_collection(self, board, marker, limit,
+                                    sort_key, sort_dir,
+                                    fields=None):
+
+        limit = api_utils.validate_limit(limit)
+        sort_dir = api_utils.validate_sort_dir(sort_dir)
+
+        marker_obj = None
+        if marker:
+            marker_obj = objects.Webservice.get_by_uuid(pecan.request.context,
+                                                        marker)
+
+        if sort_key in self.invalid_sort_key_list:
+            raise exception.InvalidParameterValue(
+                ("The sort_key value %(key)s is an invalid field for "
+                 "sorting") % {'key': sort_key})
+
+        filters = {}
+        filters['board_uuid'] = board
+        webservices = objects.Webservice.list(pecan.request.context, limit,
+                                              marker_obj,
+                                              sort_key=sort_key,
+                                              sort_dir=sort_dir,
+                                              filters=filters)
+
+        parameters = {'sort_key': sort_key, 'sort_dir': sort_dir}
+
+        return WebserviceCollection.convert_with_links(webservices, limit,
+                                                       fields=fields,
+                                                       **parameters)
+
+    @expose.expose(WebserviceCollection, types.uuid, int, wtypes.text,
+                   wtypes.text, types.listtype, types.boolean, types.boolean)
+    def get_all(self, marker=None,
+                limit=None, sort_key='id', sort_dir='asc',
+                fields=None):
+        """Retrieve a list of webservices.
+
+        :param marker: pagination marker for large data sets.
+        :param limit: maximum number of resources to return in a single result.
+                      This value cannot be larger than the value of max_limit
+                      in the [api] section of the ironic configuration, or only
+                      max_limit resources will be returned.
+        :param sort_key: column to sort results by. Default: id.
+        :param sort_dir: direction to sort. "asc" or "desc". Default: asc.
+        :param with_public: Optional boolean to get also public pluings.
+        :param all_webservices: Optional boolean to get all the pluings.
+                            Only for the admin
+        :param fields: Optional, a list with a specified set of fields
+                       of the resource to be returned.
+        """
+
+        cdict = pecan.request.context.to_policy_values()
+        policy.authorize('iot:webservice:get', cdict, cdict)
+
+        rpc_board = api_utils.get_rpc_board(self.board_ident)
+
+        filters = {}
+        filters['board_uuid'] = rpc_board.uuid
+
+        if fields is None:
+            fields = _DEFAULT_WEBSERVICE_RETURN_FIELDS
+        return self._get_webservices_collection(rpc_board.uuid, marker,
+                                                limit, sort_key, sort_dir,
+                                                fields=fields)
+
+    @expose.expose(Webservice, body=Webservice, status_code=201)
+    def put(self, Webservice):
+        """Create a new Webservice.
+
+        :param Webservice: a Webservice within the request body.
+        """
+        context = pecan.request.context
+        cdict = context.to_policy_values()
+        policy.authorize('iot:webservice:create', cdict, cdict)
+
+        if not Webservice.name:
+            raise exception.MissingParameterValue(
+                ("Name is not specified."))
+
+        if Webservice.name:
+            if not api_utils.is_valid_name(Webservice.name):
+                msg = ("Cannot create webservice with invalid name %(name)s")
+                raise wsme.exc.ClientSideError(msg % {'name': Webservice.name},
+                                               status_code=400)
+
+        rpc_board = api_utils.get_rpc_board(self.board_ident)
+
+        new_Webservice = objects.Webservice(pecan.request.context,
+                                            **Webservice.as_dict())
+
+        new_Webservice.board_uuid = rpc_board.uuid
+        new_Webservice = pecan.request.rpcapi.create_webservice(
+            pecan.request.context,
+            new_Webservice)
+
+        return Webservice.convert_with_links(new_Webservice)
+
+    class EnabledWebserverData(base.APIBase):
+        dns = wtypes.text
+        zone = wtypes.text
+        email = wtypes.text
+
+    @expose.expose(EnabledWebservice, body=EnabledWebserverData,
+                   status_code=201)
+    def enable(self, EnabledWebserverData):
+        """Create a new Webservice.
+
+        :param Webservice: a Webservice within the request body.
+        """
+        # context = pecan.request.context
+        # cdict = context.to_policy_values()
+        # policy.authorize('iot:webservice:create', cdict, cdict)
+
+        if not EnabledWebserverData.dns:
+            raise exception.MissingParameterValue(
+                ("dns is not specified."))
+        if not EnabledWebserverData.zone:
+            raise exception.MissingParameterValue(
+                ("zone is not specified."))
+        if not EnabledWebserverData.email:
+            raise exception.MissingParameterValue(
+                ("email is not specified."))
+
+        rpc_board = api_utils.get_rpc_board(self.board_ident)
+
+        new_EnWebservice = pecan.request.rpcapi.enable_webservice(
+            pecan.request.context,
+            EnabledWebserverData.dns,
+            EnabledWebserverData.zone,
+            EnabledWebserverData.email,
+            rpc_board.uuid)
+
+        return EnabledWebservice.convert_with_links(new_EnWebservice)
+
+    @expose.expose(None, status_code=204)
+    def disable(self):
+        """Disable webservices in a board.
+
+        :param board_ident: UUID or logical name of a board.
+        """
+        # context = pecan.request.context
+        # cdict = context.to_policy_values()
+        # policy.authorize('iot:board:delete', cdict, cdict)
+
+        rpc_board = api_utils.get_rpc_board(self.board_ident)
+        pecan.request.rpcapi.disable_webservice(pecan.request.context,
+                                                rpc_board.uuid)
+
+
 class BoardPortsController(rest.RestController):
 
     def __init__(self, board_ident):
@@ -486,7 +649,7 @@ class BoardPortsController(rest.RestController):
 
         rpc_board.check_if_online()
 
-        result = pecan.request.rpcapi.\
+        result = pecan.request.rpcapi. \
             create_port_on_board(pecan.request.context, rpc_board.uuid,
                                  Network.network, Network.subnet,
                                  Network.security_groups)
@@ -539,6 +702,7 @@ class BoardsController(rest.RestController):
         'plugins': BoardPluginsController,
         'services': BoardServicesController,
         'ports': BoardPortsController,
+        'webservices': BoardWebservicesController,
     }
 
     invalid_sort_key_list = ['extra', 'location']

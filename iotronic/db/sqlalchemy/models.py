@@ -1,7 +1,4 @@
 # -*- encoding: utf-8 -*-
-#
-# Copyright 2013 Hewlett-Packard Development Company, L.P.
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -281,4 +278,37 @@ class Fleet(Base):
     name = Column(String(36))
     project = Column(String(36))
     description = Column(String(300))
+    extra = Column(JSONEncodedDict)
+
+
+class Webservice(Base):
+    """Represents a webservices."""
+
+    __tablename__ = 'webservices'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_webservices0uuid'),
+        schema.UniqueConstraint('board_uuid', 'port', 'name',
+                                name='uniq_webservices_on_board'),
+        schema.UniqueConstraint('port', 'board_uuid',
+                                name='uniq_webservices_port_and_board'),
+        table_args())
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36))
+    port = Column(Integer)
+    name = Column(String(45))
+    board_uuid = Column(String(36), ForeignKey('boards.uuid'), nullable=True)
+    secure = Column(Boolean, default=True)
+    extra = Column(JSONEncodedDict)
+
+
+class EnabledWebservice(Base):
+    """The boards in which webservices are enabled."""
+
+    __tablename__ = 'enabled_webservices'
+    id = Column(Integer, primary_key=True)
+    board_uuid = Column(String(36), ForeignKey('boards.uuid'), nullable=True)
+    http_port = Column(Integer)
+    https_port = Column(Integer)
+    dns = Column(String(100))
+    zone = Column(String(100))
     extra = Column(JSONEncodedDict)
