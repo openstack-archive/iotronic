@@ -626,3 +626,86 @@ class Connection(object):
         :raises: FleetAssociated
         :raises: FleetNotFound
         """
+
+    @abc.abstractmethod
+    def get_webservice_by_id(self, webservice_id):
+        """Return a webservice.
+
+        :param webservice_id: The id of a webservice.
+        :returns: A webservice.
+        """
+
+    @abc.abstractmethod
+    def get_webservice_by_uuid(self, webservice_uuid):
+        """Return a webservice.
+
+        :param webservice_uuid: The uuid of a webservice.
+        :returns: A webservice.
+        """
+
+    @abc.abstractmethod
+    def get_webservice_by_name(self, webservice_name):
+        """Return a webservice.
+
+        :param webservice_name: The logical name of a webservice.
+        :returns: A webservice.
+        """
+
+    @abc.abstractmethod
+    def create_webservice(self, values):
+        """Create a new webservice.
+
+        :param values: A dict containing several items used to identify
+                       and track the webservice
+        :returns: A webservice.
+        """
+
+    @abc.abstractmethod
+    def destroy_webservice(self, webservice_id):
+        """Destroy a webservice and all associated interfaces.
+
+        :param webservice_id: The id or uuid of a webservice.
+        """
+
+    @abc.abstractmethod
+    def update_webservice(self, webservice_id, values):
+        """Update properties of a webservice.
+
+        :param webservice_id: The id or uuid of a webservice.
+        :param values: Dict of values to update.
+        :returns: A webservice.
+        :raises: WebserviceAssociated
+        :raises: WebserviceNotFound
+        """
+
+    @abc.abstractmethod
+    def get_enabled_webservice_by_id(self, enabled_webservice_id):
+        """Return a enabled_webservice.
+
+        :param enabled_webservice_id: The id of a enabled_webservice.
+        :returns: A enabled_webservice.
+        """
+
+    @abc.abstractmethod
+    def get_enabled_webservice_by_board_uuid(self, board_uuid):
+        """Return a enabled_webservice.
+
+        :param board_uuid: The uuid of a board enabled_webservice.
+        :returns: A enabled_webservice.
+        """
+
+    @abc.abstractmethod
+    def create_enabled_webservice(self, values):
+        """Create a new enabled_webservice.
+
+        :param values: A dict containing several items used to identify
+                       and track the enabled_webservice
+        :returns: A enabled_webservice.
+        """
+
+    @abc.abstractmethod
+    def destroy_enabled_webservice(self, enabled_webservice_id):
+        """Destroy a enabled_webservice and all associated interfaces.
+
+        :param enabled_webservice_id: The id or uuid of a enabled_webservice.
+        """

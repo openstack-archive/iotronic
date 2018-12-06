@@ -38,7 +38,7 @@ neutron_opts = [
                default='neutron',
                help=('neutron username')),
     cfg.StrOpt('password',
-               default='0penstack',
+               default='',
                help=('password')),
     cfg.StrOpt('project_name',
                default='service',

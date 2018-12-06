@@ -25,16 +25,13 @@ from wsme import types as wtypes
 
 from iotronic.api.controllers import base
 from iotronic.api.controllers import link
+from iotronic.api.controllers.v1 import board
+from iotronic.api.controllers.v1 import enabledwebservice
 from iotronic.api.controllers.v1 import fleet
 from iotronic.api.controllers.v1 import plugin
 from iotronic.api.controllers.v1 import port
 from iotronic.api.controllers.v1 import service
-# from iotronic.api.controllers.v1 import driver
-# from iotronic.api.controllers.v1 import portgroup
-# from iotronic.api.controllers.v1 import ramdisk
-# from iotronic.api.controllers.v1 import utils
-
-from iotronic.api.controllers.v1 import board
+from iotronic.api.controllers.v1 import webservice
 
 from iotronic.api.controllers.v1 import versions
 from iotronic.api import expose
@@ -63,16 +60,22 @@ class V1(base.APIBase):
     """Links to the boards resource"""
 
     plugins = [link.Link]
-    """Links to the boards resource"""
+    """Links to the plugins resource"""
 
     services = [link.Link]
-    """Links to the boards resource"""
+    """Links to the services resource"""
+
+    enabledservices = [link.Link]
+    """Links to the services resource"""
 
     ports = [link.Link]
-    """Links to the boards resource"""
+    """Links to the ports resource"""
 
     fleet = [link.Link]
-    """Links to the boards resource"""
+    """Links to the fleets resource"""
+
+    webservices = [link.Link]
+    """Links to the webservices resource"""
 
     @staticmethod
     def convert():
@@ -111,6 +114,15 @@ class V1(base.APIBase):
                                            bookmark=True)
                        ]
 
+        v1.enabledwebservices = [
+            link.Link.make_link('self', pecan.request.public_url,
+                                'enabledwebservices', ''),
+            link.Link.make_link('bookmark',
+                                pecan.request.public_url,
+                                'enabledwebservices', '',
+                                bookmark=True)
+        ]
+
         v1.ports = [link.Link.make_link('self', pecan.request.public_url,
                                         'ports', ''),
                     link.Link.make_link('bookmark',
@@ -125,6 +137,14 @@ class V1(base.APIBase):
                                          bookmark=True)
                      ]
 
+        v1.webservices = [link.Link.make_link('self', pecan.request.public_url,
+                                              'webservices', ''),
+                          link.Link.make_link('bookmark',
+                                              pecan.request.public_url,
+                                              'webservices', '',
+                                              bookmark=True)
+                          ]
+
         return v1
 
 
@@ -134,8 +154,10 @@ class Controller(rest.RestController):
     boards = board.BoardsController()
     plugins = plugin.PluginsController()
     services = service.ServicesController()
+    enabledwebservices = enabledwebservice.EnabledWebservicesController()
     ports = port.PortsController()
     fleets = fleet.FleetsController()
+    webservices = webservice.WebservicesController()
 
     @expose.expose(V1)
     def get(self):
@@ -153,19 +175,20 @@ class Controller(rest.RestController):
                 "Mutually exclusive versions requested. Version %(ver)s "
                 "requested but not supported by this service. The supported "
                 "version range is: [%(min)s, %(max)s].") % {
-                    'ver': version, 'min': versions.MIN_VERSION_STRING,
-                    'max': versions.MAX_VERSION_STRING
-                    }, headers=headers)
+                'ver': version,
+                'min': versions.MIN_VERSION_STRING,
+                'max': versions.MAX_VERSION_STRING
+            }, headers=headers)
         # ensure the minor version is within the supported range
         if version < MIN_VER or version > MAX_VER:
             raise exc.HTTPNotAcceptable(_(
                 "Version %(ver)s was requested but the minor version is not "
                 "supported by this service. The supported version range is: "
                 "[%(min)s, %(max)s].") % {
-                    'ver': version,
-                    'min': versions.MIN_VERSION_STRING,
-                    'max': versions.MAX_VERSION_STRING
-                    }, headers=headers)
+                'ver': version,
+                'min': versions.MIN_VERSION_STRING,
+                'max': versions.MAX_VERSION_STRING
+            }, headers=headers)
 
     @pecan.expose()
     def _route(self, args):

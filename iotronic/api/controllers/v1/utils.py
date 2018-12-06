@@ -147,6 +147,33 @@ def get_rpc_service(service_ident):
     raise exception.ServiceNotFound(service=service_ident)
 
 
+def get_rpc_webservice(webservice_ident):
+    """Get the RPC webservice from the webservice uuid or logical name.
+
+    :param webservice_ident: the UUID or logical name of a webservice.
+
+    :returns: The RPC Webservice.
+    :raises: InvalidUuidOrName if the name or uuid provided is not valid.
+    :raises: WebserviceNotFound if the webservice is not found.
+    """
+    # Check to see if the webservice_ident is a valid UUID.  If it is, treat it
+    # as a UUID.
+    if uuidutils.is_uuid_like(webservice_ident):
+        return objects.Webservice.get_by_uuid(pecan.request.context,
+                                              webservice_ident)
+
+    # # We can refer to webservices by their name, if the client supports it
+    # # if allow_webservice_logical_names():
+    # #    if utils.is_hostname_safe(webservice_ident):
+    # else:
+    #     return objects.Webservice.get_by_name(pecan.request.context,
+    #                                        webservice_ident)
+
+    raise exception.InvalidUuidOrName(name=webservice_ident)
+
+    raise exception.WebserviceNotFound(webservice=webservice_ident)
+
+
 def get_rpc_port(port_ident):
     """Get the RPC port from the port uuid.
 
