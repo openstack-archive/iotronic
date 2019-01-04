@@ -225,7 +225,7 @@ class ConductorEndpoint(object):
                          session.session_id + "." + \
                          board.uuid + "." + wamp_rpc_call
 
-        # check the session; it rise an excpetion if session miss
+        # check the session; it rise an exception if session miss
         if not board.is_online():
             raise exception.BoardNotConnected(board=board.uuid)
 
