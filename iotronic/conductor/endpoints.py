@@ -130,12 +130,6 @@ class ConductorEndpoint(object):
             LOG.error(msg)
             return wm.WampError(msg).serialize()
 
-        if not board.status == states.REGISTERED:
-            msg = "board with code %(board)s cannot " \
-                  "be registered again." % {'board': code}
-            LOG.error(msg)
-            return wm.WampError(msg).serialize()
-
         try:
             old_ses = objects.SessionWP(ctx)
             old_ses = old_ses.get_session_by_board_uuid(ctx, board.uuid,
@@ -151,6 +145,16 @@ class ConductorEndpoint(object):
                         'session_id': session_num}
         session = objects.SessionWP(ctx, **session_data)
         session.create()
+
+        if not board.status == states.REGISTERED:
+            msg = "board with code %(board)s " \
+                  "already registered" % {'board': code}
+            LOG.warning((msg))
+            board.status = states.OFFLINE
+            board.save()
+            LOG.debug('sending this conf %s', board.config)
+            wmessage = wm.WampSuccess(board.config)
+            return wmessage.serialize()
 
         board.agent = get_best_agent(ctx)
         agent = objects.WampAgent.get_by_hostname(ctx, board.agent)
