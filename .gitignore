@@ -1,9 +1,0 @@
-.tox
-dist
-.idea
-iotronic.egg-info
-build
-*.pyc
-AUTHORS
-Authors
-ChangeLog
